@@ -1,0 +1,60 @@
+version: "3.9"
+
+x-default-logging: &default-logging
+  options:
+    max-size: '10m'
+    max-file: '3'
+  driver: json-file
+
+services:
+
+  movie_db:
+    image: postgres:15.3
+    container_name: movie_db
+    env_file:
+      - ./auth-service/env/.pg.env
+    logging: *default-logging
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports: [ "5432:5432" ]
+
+  redis_db:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    logging: *default-logging
+    ports: [ "6379:6379" ]
+
+  movie_app:
+    build: ./auth-service/app
+    image: fastapi-movie-image
+    container_name: movie_app
+    volumes:
+      - movie_app_data:/home/data
+      - ./auth-service/app/src:/home/src
+    env_file:
+      - auth-service/env/.app.env
+    links:
+      - movie_db
+
+
+  movie_nginx:
+    build: ./auth-service/nginx
+    container_name: movie_nginx
+    restart: always
+    command: ["nginx", "-g", "daemon off;"]
+    volumes:
+      - movie_nginx_data:/home/data
+    ports: [ "443:443" ]
+    links:
+      - movie_app
+
+volumes:
+  movie_nginx_data:
+    driver: local
+  movie_app_data:
+    driver: local
+  postgres_data:
+    driver: local
+  etl_data:
+    driver: local
