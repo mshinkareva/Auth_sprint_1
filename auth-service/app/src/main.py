@@ -47,12 +47,15 @@ async def check_if_token_in_denylist(decrypted_token):
 async def startup():
     redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
 
-    postgres.engine = AsyncEngine(create_engine(settings.pg_url(), echo=True, future=True))
+    postgres.engine = AsyncEngine(
+        create_engine(settings.pg_url(), echo=True, future=True)
+    )
 
 
 @app.on_event('shutdown')
 async def shutdown():
     await redis.redis.close()
+
 
 app.include_router(auth.router, prefix='/api/v1/auth')
 

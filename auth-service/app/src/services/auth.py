@@ -28,7 +28,9 @@ class AuthService:
         return user_found if user_found else None
 
     async def check_password(self, login: str, password: str) -> bool:
-        result = await self.pg.execute(select(User).where((User.password == password) & (User.login == login)))
+        result = await self.pg.execute(
+            select(User).where((User.password == password) & (User.login == login))
+        )
         return bool(result)
 
     async def add_user(self, user):
@@ -48,7 +50,7 @@ class AuthService:
 
 @lru_cache()
 def get_auth_service(
-        redis: Redis = Depends(get_redis),
-        pg: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+    pg: AsyncSession = Depends(get_session),
 ) -> AuthService:
     return AuthService(redis, pg)

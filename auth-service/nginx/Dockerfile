@@ -3,7 +3,7 @@ FROM nginx:latest
 RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY movie.conf /etc/nginx/conf.d/movie.conf
+COPY auth_service.conf /etc/nginx/conf.d/auth_service.conf
 COPY ssl.key /home/ssl.key
 COPY ssl.pem /home/ssl.pem
 

@@ -8,15 +8,16 @@ x-default-logging: &default-logging
 
 services:
 
-  movie_db:
+  auth_service_db:
     image: postgres:15.3
-    container_name: movie_db
+    container_name: auth_service_db
     env_file:
-      - ./auth-service/env/.pg.env
+      - auth-service/env/.env
     logging: *default-logging
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     ports: [ "5432:5432" ]
+
 
   redis_db:
     image: redis:latest
@@ -25,34 +26,33 @@ services:
     logging: *default-logging
     ports: [ "6379:6379" ]
 
-  movie_app:
+  auth_service_app:
     build: ./auth-service/app
-    image: fastapi-movie-image
-    container_name: movie_app
+    image: auth_service_image
+    container_name: auth_service_app
     volumes:
-      - movie_app_data:/home/data
+      - auth_service_app_data:/home/data
       - ./auth-service/app/src:/home/src
     env_file:
-      - auth-service/env/.app.env
+      - auth-service/env/.env
     links:
-      - movie_db
+      - auth_service_db
 
-
-  movie_nginx:
+  auth_service_nginx:
     build: ./auth-service/nginx
-    container_name: movie_nginx
+    container_name: auth_service_nginx
     restart: always
     command: ["nginx", "-g", "daemon off;"]
     volumes:
-      - movie_nginx_data:/home/data
+      - auth_service_nginx_data:/home/data
     ports: [ "443:443" ]
     links:
-      - movie_app
+      - auth_service_app
 
 volumes:
-  movie_nginx_data:
+  auth_service_nginx_data:
     driver: local
-  movie_app_data:
+  auth_service_app_data:
     driver: local
   postgres_data:
     driver: local
