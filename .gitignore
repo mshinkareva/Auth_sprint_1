@@ -1,3 +1,6 @@
 *.env
 .idea/
 .env
+src/__pycache__/
+auth-service/app/src/models/__pycache__/
+auth-service/app/src/__pycache__/
