@@ -23,16 +23,3 @@ class User(SQLModel, table=True):
 
     def __repr__(self) -> str:
         return f'<User {self.login}>'
-
-
-class UserSingUp(SQLModel):
-    login: str
-    password: str = Field(max_length=256, min_length=6)
-    first_name: str
-    last_name: str
-    email: EmailStr
-
-
-class UserLogin(SQLModel):
-    login: str
-    password: str = Field(max_length=256, min_length=6)
