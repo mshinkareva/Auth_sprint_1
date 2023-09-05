@@ -23,6 +23,3 @@ class User(SQLModel, table=True):
 
     def __repr__(self) -> str:
         return f'<User {self.login}>'
-
-
-

@@ -11,7 +11,10 @@ from src.models.user import *
 from alembic import context
 from dotenv import load_dotenv
 
-load_dotenv('/Users/mariya.shinkareva/PycharmProjects/Auth_sprint_1/auth-service/env/.env')
+load_dotenv(
+    '/Users/mariya.shinkareva/PycharmProjects/Auth_sprint_1/auth-service/env/.env'
+)
+
 
 def get_url():
     return "postgresql+asyncpg://%s:%s@%s:%s/%s" % (
@@ -23,7 +26,6 @@ def get_url():
     )
 
 
-print(f'❌❌❌❌{get_url()}')
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

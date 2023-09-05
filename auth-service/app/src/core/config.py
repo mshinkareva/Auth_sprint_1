@@ -12,7 +12,8 @@ f_handler = logging.FileHandler("file.log", mode="w")
 
 f_format = logging.Formatter(
     fmt='%(asctime)s %(levelname)-8s [%(filename)-16s:%(lineno)-5d] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S')
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
 
 f_handler.setFormatter(f_format)
 
