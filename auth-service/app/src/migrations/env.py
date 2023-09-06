@@ -7,6 +7,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from src.models.user import *
+from src.models.user_roles import UserRoles
+from src.models.history import AccountHistory
 
 from alembic import context
 from dotenv import load_dotenv
@@ -24,7 +26,6 @@ def get_url():
         os.getenv("POSTGRES_PORT"),
         os.getenv("POSTGRES_DB"),
     )
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
