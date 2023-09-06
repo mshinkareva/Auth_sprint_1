@@ -9,6 +9,8 @@ from sqlmodel import SQLModel
 from src.models.user import *
 from src.models.user_roles import UserRoles
 from src.models.history import AccountHistory
+from src.models.refresh_token import RefreshToken
+from src.models.role import Role
 
 from alembic import context
 from dotenv import load_dotenv
