@@ -5,9 +5,11 @@ from fastapi import Depends
 from redis.asyncio import Redis
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-
+from werkzeug.security import generate_password_hash
+from src.core.config import logger
 from src.db.postgres import get_session
 from src.db.redis import get_redis
+from src.models.data import UserSingUp
 from src.models.user import User
 from src.services.const import CACHE_EXPIRE_REFRESH_TOKEN
 
@@ -33,10 +35,20 @@ class AuthService:
         )
         return bool(result)
 
-    async def add_user(self, user):
-        self.pg.add(user)
+    async def add_user(self, user: UserSingUp) -> None:
+        hashed_pwd = generate_password_hash(user.password)
+        logger.info(f"/signup - password: {user.password}, hashed_pwd: {hashed_pwd}")
+        user_signup = User(
+            login=user.login,
+            password=hashed_pwd,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+        )
+        #TODO history
+
+        self.pg.add(user_signup)
         await self.pg.commit()
-        await self.pg.refresh(user)
 
     async def add_jwt_to_redis(self, login: str, jwt_val: str):
         self.redis.set(f'{login}::{jwt_val}', jwt_val, CACHE_EXPIRE_REFRESH_TOKEN)
