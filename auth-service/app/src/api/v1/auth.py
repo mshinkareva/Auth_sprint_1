@@ -1,10 +1,10 @@
 from http import HTTPStatus
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from src.models.data import UserSingUp, UserLogin
-from src.services.auth import AuthService, get_auth_service
+from fastapi import APIRouter, Depends, HTTPException
+
 from src.core.config import logger
+from src.models.data import UserSingUp
+from src.services.auth import AuthService, get_auth_service
 
 router = APIRouter()
 
@@ -17,16 +17,13 @@ router = APIRouter()
     summary="Регистрация пользователя ",
 )
 async def register(
-    user_create: UserSingUp, user_service: AuthService = Depends(get_auth_service)
-) -> UserLogin:
+        user_create: UserSingUp, user_service: AuthService = Depends(get_auth_service)
+) -> HTTPStatus:
     logger.info(f"/signup - login: {user_create.login}")
-
     user_found = await user_service.get_by_login(user_create.login)
     if user_found:
         logger.info(f"/signup - login: {user_create.login}, found")
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Username is taken'
-        )
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Username is taken')
 
     user_found = await user_service.get_by_mail(user_create.email)
     logger.info(f"/signup - emain: {user_create.email}")
@@ -34,7 +31,11 @@ async def register(
         logger.info(f"/signup - email: {user_create.email}, found")
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Mail is taken')
 
-    await user_service.add_user(user=user_create)
-    logger.info(f"/signup - OK")
-    return UserLogin(login=user_create.login, password=user_create.password)
+    try:
+        await user_service.add_user(user=user_create)
+        logger.info(f"Signup successful for login: {user_create.login}")
+        return HTTPStatus.CREATED
+    except Exception as ex:
+        logger.error(f"Signup failed due to error: {ex}")
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(ex))
 

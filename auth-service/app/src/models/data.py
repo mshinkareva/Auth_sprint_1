@@ -1,11 +1,24 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr
 
 
 class UserSingUp(BaseModel):
-    pass
+    login: str
+    password: str
+    email: EmailStr
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 
 class UserLogin(BaseModel):
-    pass
+    login: str
+    password: str
+
+    class Config:
+        orm_mode = True
 
 
