@@ -37,7 +37,7 @@ class AuthService:
 
     async def add_user(self, user: UserSingUp) -> None:
         hashed_pwd = generate_password_hash(user.password)
-        logger.info(f"/signup - password: {user.password}, hashed_pwd: {hashed_pwd}")
+        logger.info(f"/signup - user: {user.login}")
         user_signup = User(
             login=user.login,
             password=hashed_pwd,
@@ -46,6 +46,7 @@ class AuthService:
             email=user.email,
         )
         #TODO history
+        logger.warning(f'❌ ❌ ❌ {user_signup}')
 
         self.pg.add(user_signup)
         await self.pg.commit()
