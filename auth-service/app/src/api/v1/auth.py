@@ -14,16 +14,18 @@ router = APIRouter()
     status_code=HTTPStatus.OK,
     tags=['auth'],
     description='Register new user',
-    summary="Регистрация пользователя ",
+    summary="Регистрация нового пользователя",
 )
 async def register(
-        user_create: UserSingUp, user_service: AuthService = Depends(get_auth_service)
+    user_create: UserSingUp, user_service: AuthService = Depends(get_auth_service)
 ) -> HTTPStatus:
     logger.info(f"/signup - login: {user_create.login}")
     user_found = await user_service.get_by_login(user_create.login)
     if user_found:
         logger.info(f"/signup - login: {user_create.login}, found")
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Username is taken')
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail='Username is taken'
+        )
 
     user_found = await user_service.get_by_mail(user_create.email)
     logger.info(f"/signup - emain: {user_create.email}")
@@ -38,4 +40,3 @@ async def register(
     except Exception as ex:
         logger.error(f"Signup failed due to error: {ex}")
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(ex))
-
