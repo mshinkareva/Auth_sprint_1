@@ -45,7 +45,7 @@ class AuthService:
             last_name=user.last_name,
             email=user.email,
         )
-        #TODO history
+        # TODO history
         logger.warning(f'❌ ❌ ❌ {user_signup}')
 
         self.pg.add(user_signup)

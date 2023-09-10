@@ -9,7 +9,8 @@ class AccountHistory(SQLModel, table=True):
         primary_key=True,
         index=True,
         unique=True,
-        nullable=False)
+        nullable=False,
+    )
 
     user_login: str = Field(max_length=256, min_length=6, nullable=False)
     created_at: datetime.datetime = datetime.datetime.now()

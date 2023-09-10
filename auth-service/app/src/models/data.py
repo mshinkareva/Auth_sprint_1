@@ -22,3 +22,17 @@ class UserLogin(BaseModel):
         orm_mode = True
 
 
+class PermissionCreate(BaseModel):
+    name: str
+    description: str
+
+    class Config:
+        orm_mode = True
+
+
+class PermissionInDb(BaseModel):
+    name: str
+    description: str
+
+    class Config:
+        orm_mode = True
