@@ -47,20 +47,19 @@ async def get_permission(
 
 @router.delete(
     '/delete',
-    status_code=HTTPStatus.OK,
+    status_code=HTTPStatus.NO_CONTENT,
     tags=['permissions'],
     description='Delete Permission',
     summary="Удалить разрешение",
 )
-async def delete_role(
+async def delete_permission(
         name: Annotated[str, Query(alias='name')],
         service: PermissionService = Depends(permission_services)
-) -> bool:
+) -> None:
     result = await service.delete_permission(name=name)
 
     if not result:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role not exist')
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist')
 
-    return True
 
 
