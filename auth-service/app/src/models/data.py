@@ -36,3 +36,32 @@ class PermissionInDb(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class RoleInDb(BaseModel):
+    name: str
+    description: str
+
+    class Config:
+        orm_mode = True
+
+
+class RoleCreate(RoleInDb):
+    pass
+
+
+class RoleUpdate(BaseModel):
+    name: str
+    new_name: str
+    new_description: str
+
+    class Config:
+        orm_mode = True
+
+
+class UserRole(BaseModel):
+    login: str
+    role: str
+
+    class Config:
+        orm_mode = True

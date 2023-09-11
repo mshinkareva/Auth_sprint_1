@@ -18,12 +18,16 @@ router = APIRouter()
     summary="Создать разрешение",
 )
 async def create_permission(
-        permission: PermissionCreate,
-        service: PermissionService = Depends(permission_services)
+    permission: PermissionCreate,
+    service: PermissionService = Depends(permission_services),
 ) -> PermissionInDb:
-    result = await service.create_permission(name=permission.name, description=permission.description)
+    result = await service.create_permission(
+        name=permission.name, description=permission.description
+    )
     if not result:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Permission is taken')
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail='Permission is taken'
+        )
 
     return PermissionInDb(name=permission.name, description=permission.description)
 
@@ -36,11 +40,13 @@ async def create_permission(
     summary="Список разрешений",
 )
 async def get_permission(
-        service: PermissionService = Depends(permission_services)
+    service: PermissionService = Depends(permission_services),
 ) -> list[PermissionInDb]:
     result = await service.get_permissions()
     if not result:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist')
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist'
+        )
 
     return [PermissionInDb(name=it.name, description=it.description) for it in result]
 
@@ -53,13 +59,12 @@ async def get_permission(
     summary="Удалить разрешение",
 )
 async def delete_permission(
-        name: Annotated[str, Query(alias='name')],
-        service: PermissionService = Depends(permission_services)
+    name: Annotated[str, Query(alias='name')],
+    service: PermissionService = Depends(permission_services),
 ) -> None:
     result = await service.delete_permission(name=name)
 
     if not result:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist')
-
-
-
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist'
+        )
