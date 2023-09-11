@@ -46,12 +46,8 @@ class RoleInDb(BaseModel):
         orm_mode = True
 
 
-class RoleCreate(BaseModel):
-    name: str
-    description: str
-
-    class Config:
-        orm_mode = True
+class RoleCreate(RoleInDb):
+    pass
 
 
 class RoleUpdate(BaseModel):
@@ -61,6 +57,7 @@ class RoleUpdate(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class UserRole(BaseModel):
     login: str

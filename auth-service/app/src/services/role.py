@@ -1,4 +1,6 @@
 from functools import lru_cache
+from typing import Optional
+
 from fastapi import Depends
 from sqlmodel import select, update, delete
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -16,26 +18,29 @@ class RoleService:
     def __init__(self, pg: AsyncSession) -> None:
         self.pg = pg
 
-    async def exist_role(self, name) -> bool:
+    async def exist_role(self, name: str) -> bool:
         logger.info("Check if role exist")
         result = await self.pg.execute(select(Role).where(Role.name == name))
         found = result.scalars().first()
 
         return bool(found)
 
-    async def create_role(self, name: str, description: str) -> bool:
+    async def create_role(self, name: str, description: str) -> Optional[Role]:
         logger.info("Start create_role")
         if await self.exist_role(name=name):
-            return False
+            return None
         role = Role(name=name, description=description)
         self.pg.add(role)
         await self.pg.commit()
-        return True
+        return role
 
     async def get_roles(self) -> list[RoleInDb]:
         logger.info("Start all get_permissions")
         data = await self.pg.execute(select(Role))
-        return [RoleInDb(name=role.name, description=role.description) for role in data.scalars()]
+        return [
+            RoleInDb(name=role.name, description=role.description)
+            for role in data.scalars()
+        ]
 
     async def delete_role(self, name: str) -> bool:
         logger.info("Start delete_role")
@@ -53,7 +58,9 @@ class RoleService:
         return bool(found)
 
     async def exist_user_role(self, login: str) -> bool:
-        result = await self.pg.execute(select(UserRoles).where(UserRoles.user_login == login))
+        result = await self.pg.execute(
+            select(UserRoles).where(UserRoles.user_login == login)
+        )
         found = result.scalars().first()
 
         return bool(found)
@@ -69,7 +76,9 @@ class RoleService:
 
         if await self.exist_user_role(login=login):
             values = {"user_role": name}
-            await self.pg.execute(update(UserRoles).where(UserRoles.user_login == login).values(**values))
+            await self.pg.execute(
+                update(UserRoles).where(UserRoles.user_login == login).values(**values)
+            )
             await self.pg.commit()
         else:
             user_role = UserRoles(user_login=login, user_role=name)
@@ -85,7 +94,11 @@ class RoleService:
             return False
 
         if await self.exist_user_role(login=login):
-            await self.pg.execute(delete(UserRoles).where(UserRoles.user_login == login and UserRoles.user_role == role ))
+            await self.pg.execute(
+                delete(UserRoles).where(
+                    UserRoles.user_login == login and UserRoles.user_role == role
+                )
+            )
             await self.pg.commit()
 
         return True
@@ -93,6 +106,6 @@ class RoleService:
 
 @lru_cache()
 def role_services(
-        pg: AsyncSession = Depends(get_session),
+    pg: AsyncSession = Depends(get_session),
 ) -> RoleService:
     return RoleService(pg=pg)

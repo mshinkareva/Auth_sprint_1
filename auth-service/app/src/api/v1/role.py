@@ -3,8 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from src.models.data import RoleInDb, RoleCreate, UserRole
 from src.services.role import RoleService, role_services
-from src.models.data import RoleInDb, RoleCreate, RoleUpdate, UserRole
 
 router = APIRouter()
 
@@ -17,14 +17,12 @@ router = APIRouter()
     summary="Создать роль",
 )
 async def create_role(
-        role: RoleCreate,
-        service: RoleService = Depends(role_services)
+    role: RoleCreate, service: RoleService = Depends(role_services)
 ) -> RoleInDb:
-    result = await service.create_role(name=role.name, description=role.description)
-    if not result:
+    role = await service.create_role(name=role.name, description=role.description)
+    if not role:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role is taken')
-
-    return RoleInDb(name=role.name, description=role.description)
+    return RoleInDb.parse_obj(role)
 
 
 @router.get(
@@ -34,9 +32,7 @@ async def create_role(
     description='List Roles',
     summary="Список ролей",
 )
-async def get_role(
-        service: RoleService = Depends(role_services)
-) -> list[RoleInDb]:
+async def get_role(service: RoleService = Depends(role_services)) -> list[RoleInDb]:
     result = await service.get_roles()
     if not result:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role not exist')
@@ -52,25 +48,26 @@ async def get_role(
     summary="Удалить роль",
 )
 async def delete_role(
-        name: Annotated[str, Query(alias='name')],
-        service: RoleService = Depends(role_services)
+    name: Annotated[str, Query(alias='name')],
+    service: RoleService = Depends(role_services),
 ) -> None:
     result = await service.delete_role(name=name)
 
     if not result:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist')
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist'
+        )
 
 
 @router.post(
-    "/user_set",
+    '/user_set',
     status_code=HTTPStatus.OK,
     tags=['roles'],
     description='User set Roles',
     summary="Назначить роль user",
 )
 async def user_set_role(
-        user_role: UserRole,
-        service: RoleService = Depends(role_services)
+    user_role: UserRole, service: RoleService = Depends(role_services)
 ) -> bool:
     role = await service.set_user_role(login=user_role.login, name=user_role.role)
 
@@ -81,15 +78,14 @@ async def user_set_role(
 
 
 @router.delete(
-    "/user_del",
+    '/user_del',
     status_code=HTTPStatus.OK,
     tags=['roles'],
     description='User delete Roles',
     summary="Удалить роль у пользователя user",
 )
 async def user_delete_role(
-        user_role: UserRole,
-        service: RoleService = Depends(role_services)
+    user_role: UserRole, service: RoleService = Depends(role_services)
 ) -> bool:
     result = await service.delete_user_role(login=user_role.login, role=user_role.role)
 
@@ -97,4 +93,3 @@ async def user_delete_role(
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='User not exist')
 
     return True
-

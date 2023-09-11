@@ -16,7 +16,9 @@ class PermissionService:
         self.pg = pg
 
     async def exist_permission(self, name) -> bool:
-        result = await self.pg.execute(select(Permission).where(Permission.name == name))
+        result = await self.pg.execute(
+            select(Permission).where(Permission.name == name)
+        )
         found = result.scalars().first()
 
         return bool(found)
@@ -37,10 +39,12 @@ class PermissionService:
         return True
 
     async def get_permissions(self) -> list[PermissionInDb]:
-
         logger.info("Start get_permissions")
         data = await self.pg.execute(select(Permission))
-        return [PermissionInDb(name=it.name, description=it.description) for it in data.scalars()]
+        return [
+            PermissionInDb(name=it.name, description=it.description)
+            for it in data.scalars()
+        ]
 
     async def delete_permission(self, name: str) -> bool:
         logger.info("Start delete_permission")
@@ -48,13 +52,15 @@ class PermissionService:
         if not await self.exist_permission(name=name):
             return False
 
-        result = await self.pg.execute(delete(Permission).where(Permission.name == name))
+        result = await self.pg.execute(
+            delete(Permission).where(Permission.name == name)
+        )
         await self.pg.commit()
         return bool(result)
 
 
 @lru_cache()
 def permission_services(
-        pg: AsyncSession = Depends(get_session),
+    pg: AsyncSession = Depends(get_session),
 ) -> PermissionService:
     return PermissionService(pg=pg)

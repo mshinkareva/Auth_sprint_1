@@ -9,7 +9,8 @@ class Permission(SQLModel, table=True):
         primary_key=True,
         index=True,
         unique=True,
-        nullable=False)
+        nullable=False,
+    )
     name: str = Field(max_length=256, min_length=6, nullable=False)
     description: str = Field(max_length=256, min_length=6)
 
