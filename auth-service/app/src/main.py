@@ -25,22 +25,16 @@ app = FastAPI(
 )
 
 
-class Settings(BaseModel):
-    authjwt_secret_key: str = "secret"
-    authjwt_denylist_enabled: bool = True
-    authjwt_denylist_token_checks: set = {"access", "refresh"}
-
-
 @AuthJWT.load_config
 def get_config():
-    return Settings()
+    return settings
 
 
 @AuthJWT.token_in_denylist_loader
 async def check_if_token_in_denylist(decrypted_token):
-    jti = decrypted_token['jti']
+    jti = decrypted_token['jti'] or decrypted_token['refresh_jti']
     entry = await redis.redis.get(jti)
-    return entry and entry == 'true'
+    return entry and entry.decode("utf-8") == "true"
 
 
 @app.on_event('startup')

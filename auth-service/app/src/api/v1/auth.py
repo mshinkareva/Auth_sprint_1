@@ -1,4 +1,6 @@
 from http import HTTPStatus
+
+from async_fastapi_jwt_auth.exceptions import RevokedTokenError
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.responses import Response
 
@@ -8,7 +10,6 @@ from src.models.data import UserSingUp, UserLogin
 from src.services.auth import AuthService, get_auth_service
 
 router = APIRouter()
-
 
 @router.post(
     '/signup',
@@ -66,8 +67,13 @@ async def login(
         )
     try:
         await auth_service.check_password(user=user)
-        access_token = await auth_service.create_access_token(user_found.email)
-        refresh_token = await auth_service.create_refresh_token(user_found.email)
+        refresh_token = await auth_service.create_refresh_token(
+            user_found.email
+        )
+        refresh_jti = await auth_service.auth.get_jti(refresh_token)
+        access_token = await auth_service.create_access_token(
+            user_found.email, {"refresh_jti": refresh_jti}
+        )
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
     except ValueError as ex:
         logger.error(f"login failed due to error: {ex}")
@@ -81,21 +87,24 @@ async def login(
     status_code=HTTPStatus.OK,
     tags=['auth'],
     description='Logout user',
-    summary="Выход пользователя из сичтемы",
+    summary="Выход пользователя из сиcтемы",
 )
 async def logout(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Response:
     logger.info("/logout user - get access and refresh tokens")
-    await auth_service.auth.jwt_required()
-    await auth_service.auth.jwt_refresh_token_required()
+    try:
+        await auth_service.auth.jwt_required()
+    except RevokedTokenError as ex:
+        logger.info("/logout user - access_token has been revoked", exc_info=ex)
+        return Response(status_code=HTTPStatus.UNAUTHORIZED)
     subject = await auth_service.auth.get_jwt_subject()
-    logger.info(f"/ get user - login: {subject.login}")
-    user = auth_service.get_by_mail(subject)
+    logger.info(f"/ get user - login: {subject}")
+    user = await auth_service.get_by_mail(subject)
     if user:
         logger.info(f"/Set expire tokens to redis")
         await auth_service.revoke_both_tokens(user.login)
-    return Response(HTTPStatus.OK)
+    return Response(status_code=HTTPStatus.OK)
 
 
 @router.post(
@@ -110,23 +119,23 @@ async def refresh_token(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Response | LoginResponse:
     logger.info("/refresh user - get access and refresh tokens")
-    await auth_service.auth.jwt_required()
-    await auth_service.auth.jwt_refresh_token_required()
-    refresh_jti = (await auth_service.auth.auth.get_raw_jwt())['jti']
+    try:
+        await auth_service.auth.jwt_refresh_token_required()
+    except RevokedTokenError as ex:
+        logger.info("/logout user - refresh_token has been revoked", exc_info=ex)
+        return Response(status_code=HTTPStatus.UNAUTHORIZED)
 
     jwt_subject = await auth_service.auth.get_jwt_subject()
-    logger.info(f"/ get user - login: {jwt_subject.login}")
-    user = auth_service.get_by_mail(jwt_subject)
+    logger.info(f"/ get user - login: {jwt_subject}")
+    user = await auth_service.get_by_mail(jwt_subject)
     if not user:
-        return Response(HTTPStatus.UNAUTHORIZED)
+        return Response(status_code=HTTPStatus.UNAUTHORIZED)
 
     logger.info(f"/Set expire tokens to redis")
     await auth_service.revoke_both_tokens(user.login)
-    token_is_expired = auth_service.check_token_is_expired(user.login, refresh_jti)
-    if token_is_expired:
-        return Response(HTTPStatus.UNAUTHORIZED)
-    new_access_token = auth_service.create_access_token(subject=jwt_subject)
-    new_refresh_token = auth_service.create_access_token(subject=jwt_subject)
+
+    new_access_token = await auth_service.create_access_token(payload=jwt_subject)
+    new_refresh_token = await auth_service.create_access_token(payload=jwt_subject)
 
     return LoginResponse(
         access_token=new_access_token, refresh_token=new_refresh_token

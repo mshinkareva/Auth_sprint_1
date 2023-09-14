@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Optional
 
 from async_fastapi_jwt_auth import AuthJWT
 from fastapi import Depends
@@ -12,6 +13,7 @@ from src.db.redis import get_redis
 from src.models.data import UserSingUp, UserLogin
 from src.models.user import User
 from src.services.const import CACHE_EXPIRE_REFRESH_TOKEN
+from src.settings import settings
 
 
 class AuthService:
@@ -57,20 +59,20 @@ class AuthService:
         await self.pg.commit()
 
     async def add_jwt_to_redis(self, login: str, jwt_val: str):
-        self.redis.set(f'{login}::{jwt_val}', jwt_val, CACHE_EXPIRE_REFRESH_TOKEN)
+        await self.redis.set(jwt_val, "true", settings.access_expires)
 
     async def revoke_both_tokens(self, login) -> None:
-        refresh_jti = (await self.auth.get_raw_jwt())['jti']
-        access_jti = (await self.auth.get_raw_jwt())['access_jti']
+        refresh_jti = (await self.auth.get_raw_jwt())['refresh_jti']
+        access_jti = (await self.auth.get_raw_jwt())['jti']
         await self.add_jwt_to_redis(login, access_jti)
         await self.add_jwt_to_redis(login, refresh_jti)
 
-    async def create_access_token(self, payload: str):
-        access_token = await self.auth.create_access_token(payload)
+    async def create_access_token(self, payload: str, user_claims: Optional[dict] = {}):
+        access_token = await self.auth.create_access_token(payload, user_claims=user_claims)
         return access_token
 
-    async def create_refresh_token(self, payload: str):
-        refresh_token = await self.auth.create_refresh_token(payload)
+    async def create_refresh_token(self, payload: str, user_claims: Optional[dict] = {}):
+        refresh_token = await self.auth.create_refresh_token(payload, user_claims=user_claims)
         return refresh_token
 
     async def check_token_is_expired(self, login: str, jwt_val: str) -> bool:
