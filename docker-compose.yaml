@@ -42,11 +42,30 @@ services:
     build: ./auth-service/nginx
     container_name: auth_service_nginx
     restart: always
+    logging: *default-logging
     command: ["nginx", "-g", "daemon off;"]
     volumes:
       - auth_service_nginx_data:/home/data
     ports: [ "443:443" ]
     links:
+      - auth_service_app
+
+  tests:
+    image: auth_service_image
+    container_name: auth_service_tests
+    entrypoint: >
+      sh -c "python3 /home/tests/functional/utils/wait_for_postgres.py
+      && pytest /home/tests/functional/src/test_permissions.py"
+    links:
+      - auth_service_app
+      - auth_service_db
+    env_file:
+      - auth-service/env/.tests.env
+    logging: *default-logging
+    volumes:
+      - auth_tests_data:/home/tests
+    depends_on:
+      - auth_service_db
       - auth_service_app
 
 volumes:
@@ -56,5 +75,5 @@ volumes:
     driver: local
   postgres_data:
     driver: local
-  etl_data:
+  auth_tests_data:
     driver: local
