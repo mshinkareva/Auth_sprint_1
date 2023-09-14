@@ -1,6 +1,9 @@
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Session, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession, AsyncEngine
 from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
+
+from src.settings import settings
 
 engine: AsyncEngine
 
@@ -18,4 +21,11 @@ async def purge_database() -> None:
 async def get_session() -> AsyncSession:
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
+        yield session
+
+
+@contextmanager
+def get_session_sync() -> Session:
+    sync_session = sessionmaker(create_engine(settings.pg_url_sync()))
+    with sync_session() as session:
         yield session
