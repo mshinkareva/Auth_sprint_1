@@ -1,7 +1,4 @@
-import os
-
 from typing import Optional
-from dotenv import load_dotenv
 
 import typer
 from typing_extensions import Annotated
@@ -9,17 +6,16 @@ from typing_extensions import Annotated
 from src.db.postgres import get_session_sync
 from src.models.user import User
 
-
 app = typer.Typer()
 
 
 @app.command()
 def create_user(login: str,
-           password: str,
-           email: str,
-           first_name: Annotated[Optional[str], typer.Argument()]= 'Admin',
-           last_name: Annotated[Optional[str], typer.Argument()] = 'Super',
-           ):
+                password: str,
+                email: str,
+                first_name: Annotated[Optional[str], typer.Argument()] = 'Admin',
+                last_name: Annotated[Optional[str], typer.Argument()] = 'Super',
+                ):
     """
     Create a new user with USERNAME.
     """

@@ -1,7 +1,7 @@
+from contextlib import contextmanager
 from sqlmodel import SQLModel, Session, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession, AsyncEngine
 from sqlalchemy.orm import sessionmaker
-from contextlib import contextmanager
 
 from src.settings import settings
 

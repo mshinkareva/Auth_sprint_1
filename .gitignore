@@ -2,3 +2,4 @@
 .idea/
 **/__pycache__/
 auth-service/app/src/migrations/__pycache__
+venv/
