@@ -9,7 +9,7 @@ from redis.asyncio import Redis
 from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncEngine
 
-from src.api.v1 import auth
+from src.api.v1 import auth, permission, role
 from src.core.logger import LOGGING
 from src.db import redis, postgres
 from src.ratelimiter import RateLimiter
@@ -58,6 +58,9 @@ async def shutdown():
 
 
 app.include_router(auth.router, prefix='/api/v1/auth')
+app.include_router(permission.router, prefix='/api/v1/permission')
+app.include_router(role.router, prefix='/api/v1/role')
+
 
 if __name__ == '__main__':
     uvicorn.run(

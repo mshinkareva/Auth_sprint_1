@@ -11,6 +11,7 @@ from src.models.user_roles import UserRoles
 from src.models.history import AccountHistory
 from src.models.refresh_token import RefreshToken
 from src.models.role import Role
+from src.models.permission import Permission
 
 from alembic import context
 from dotenv import load_dotenv
@@ -28,6 +29,7 @@ def get_url():
         os.getenv("POSTGRES_PORT"),
         os.getenv("POSTGRES_DB"),
     )
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
