@@ -17,7 +17,8 @@ COPY entrypoint.sh /home
 COPY pytest.ini /home
 
 COPY src/ /home/src
-COPY src/tests/ /home/tests
+COPY tests/ /home/tests/
+
 
 RUN pip install --upgrade pip \
     && pip install -r /home/requirements.txt
