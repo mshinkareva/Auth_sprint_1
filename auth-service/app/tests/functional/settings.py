@@ -3,7 +3,9 @@ from pydantic import BaseSettings, Field
 import dotenv
 
 
-dotenv.load_dotenv("/Users/mariya.shinkareva/PycharmProjects/Auth_sprint_1/auth-service/env/.tests.env")
+dotenv.load_dotenv(
+    "/Users/mariya.shinkareva/PycharmProjects/Auth_sprint_1/auth-service/env/.tests.env"
+)
 
 
 class TestSettings(BaseSettings):
@@ -25,4 +27,3 @@ class DatabaseSettings(BaseSettings):
 
 
 test_settings = TestSettings()
-

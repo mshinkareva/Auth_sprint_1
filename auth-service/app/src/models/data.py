@@ -65,3 +65,11 @@ class UserRole(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UserInDb(BaseModel):
+    login: str
+    email: str
+
+    class Config:
+        orm_mode = True
