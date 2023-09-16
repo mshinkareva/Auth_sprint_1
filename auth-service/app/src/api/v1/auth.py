@@ -100,10 +100,8 @@ async def logout(
         return Response(status_code=HTTPStatus.UNAUTHORIZED)
     subject = await auth_service.auth.get_jwt_subject()
     logger.info(f"/ get user - login: {subject}")
-    user = await auth_service.get_by_mail(subject)
-    if user:
-        logger.info(f"/Set expire tokens to redis")
-        await auth_service.revoke_both_tokens(user.login)
+    logger.info(f"/Set expire tokens to redis")
+    await auth_service.revoke_both_tokens()
     return Response(status_code=HTTPStatus.OK)
 
 
@@ -132,7 +130,7 @@ async def refresh_token(
         return Response(status_code=HTTPStatus.UNAUTHORIZED)
 
     logger.info(f"/Set expire tokens to redis")
-    await auth_service.revoke_both_tokens(user.login)
+    await auth_service.revoke_both_tokens()
 
     new_access_token = await auth_service.create_access_token(payload=jwt_subject)
     new_refresh_token = await auth_service.create_access_token(payload=jwt_subject)

@@ -58,14 +58,15 @@ class AuthService:
         self.pg.add(user_signup)
         await self.pg.commit()
 
-    async def add_jwt_to_redis(self, login: str, jwt_val: str):
+    async def add_jwt_to_redis(self, jwt_val: str):
         await self.redis.set(jwt_val, "true", settings.access_expires)
 
-    async def revoke_both_tokens(self, login) -> None:
-        refresh_jti = (await self.auth.get_raw_jwt())['refresh_jti']
+    async def revoke_both_tokens(self) -> None:
+        refresh_jti = (await self.auth.get_raw_jwt()).get('refresh_jti')
         access_jti = (await self.auth.get_raw_jwt())['jti']
-        await self.add_jwt_to_redis(login, access_jti)
-        await self.add_jwt_to_redis(login, refresh_jti)
+        await self.add_jwt_to_redis(access_jti)
+        if refresh_jti:
+            await self.add_jwt_to_redis(refresh_jti)
 
     async def create_access_token(self, payload: str, user_claims: Optional[dict] = {}):
         access_token = await self.auth.create_access_token(payload, user_claims=user_claims)
