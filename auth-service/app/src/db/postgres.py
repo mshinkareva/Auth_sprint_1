@@ -26,6 +26,6 @@ async def get_session() -> AsyncSession:
 
 @contextmanager
 def get_session_sync() -> Session:
-    sync_session = sessionmaker(create_engine(settings.pg_url_sync()))
-    with sync_session() as session:
+    engine = create_engine(settings.pg_url_sync())
+    with Session(engine) as session:
         yield session

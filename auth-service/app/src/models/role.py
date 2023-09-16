@@ -11,8 +11,8 @@ class Role(SQLModel, table=True):
         unique=True,
         nullable=False,
     )
-    name: str = Field(max_length=256, min_length=6, nullable=False)
-    description: str = Field(max_length=256, min_length=6)
+    name: str = Field(max_length=256, min_length=5, nullable=False, unique=True)
+    description: str = Field(max_length=256, min_length=5)
 
     def __repr__(self) -> str:
         return f'<Role {self.name}>'
