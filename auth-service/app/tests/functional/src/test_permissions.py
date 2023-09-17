@@ -12,4 +12,3 @@ async def test_post_permissions(make_post_request, make_get_request, make_permis
     permissions = [Permission(**data) for data in permissions_raw]
     new_permission = Permission(**make_permission)
     assert new_permission in permissions
-
