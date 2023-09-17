@@ -12,13 +12,14 @@ async def connect_postgres() -> Optional[bool]:
     conn = await asyncpg.connect(dsn=connection)
     try:
         await conn.fetch("SELECT 1 FROM permission LIMIT 1;")
-        print("Successfully connected to the 'permissions' table.")
+        await conn.fetch("SELECT 1 FROM role LIMIT 1;")
+        print("Successfully connected to the tables.")
         return True
     except asyncpg.UndefinedTableError as ex:
-        print(f"😀The table 'permissions' does not exist! {ex}")
+        print(f"😀 some tables does not exist! {ex}")
         return False
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    except Exception as ex:
+        print(f"An error occurred: {ex}")
         return False
     finally:
         await conn.close()

@@ -1,5 +1,6 @@
 import json
 from http import HTTPStatus
+from time import sleep
 
 import pytest_asyncio
 
@@ -20,6 +21,7 @@ def make_get_request(client):
 @pytest_asyncio.fixture
 def make_post_request(client):
     async def inner(api_url: str, query_data: dict):
+        sleep(5)
         response = await client.post(url=api_url, json=query_data)
         if response.status_code != HTTPStatus.OK:
             raise Exception(
