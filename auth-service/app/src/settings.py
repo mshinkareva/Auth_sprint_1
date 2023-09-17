@@ -1,6 +1,7 @@
 from pydantic import BaseSettings
 
-
+from dotenv import load_dotenv
+load_dotenv('/Users/lappa/PyCharmProject/Auth_sprint_1/auth-service/env/.env')
 class Settings(BaseSettings):
     project_name: str = ...
     redis_host: str = ...
