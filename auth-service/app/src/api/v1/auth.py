@@ -129,7 +129,6 @@ async def refresh_token(
     if not user:
         return Response(status_code=HTTPStatus.UNAUTHORIZED)
 
-    logger.info(f"/Set expire tokens to redis")
     await auth_service.revoke_both_tokens()
 
     new_access_token = await auth_service.create_access_token(payload=jwt_subject)

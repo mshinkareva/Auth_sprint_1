@@ -24,9 +24,7 @@ async def get_users(
 ) -> list[UserInDb]:
     result = await service.get_users()
     if not result:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='user not exist'
-        )
+        return []
 
     return [UserInDb(login=user.login, email=user.email) for user in result]
 
@@ -43,7 +41,7 @@ async def get_user(
     result = await service.get_user(login=user)
     if not result:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='user not exist'
+            status_code=HTTPStatus.NOT_FOUND, detail='user not exist'
         )
     return result
 
