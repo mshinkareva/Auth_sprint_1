@@ -21,3 +21,14 @@ def make_permission(timestamp):
 @pytest.fixture
 def make_role(timestamp):
     return {'name': f'role_{timestamp}', 'description': f'role_{timestamp}'}
+
+
+@pytest.fixture
+def make_user(timestamp):
+    return {
+        'login': f'user_{timestamp}',
+        'password': f'user_{timestamp}',
+        'email': f'user_{timestamp}@example.com',
+        'first_name': f'user_{timestamp}',
+        'last_name': f'user_{timestamp}'
+    }
