@@ -1,7 +1,6 @@
 from pydantic import BaseSettings
 
-from dotenv import load_dotenv
-load_dotenv('/Users/lappa/PyCharmProject/Auth_sprint_1/auth-service/env/.env')
+
 class Settings(BaseSettings):
     project_name: str = ...
     redis_host: str = ...
@@ -15,9 +14,6 @@ class Settings(BaseSettings):
 
     def pg_url(self):
         return f'postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}'
-
-    def pg_url_sync(self):
-        return f'postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}'
 
 
 settings = Settings()

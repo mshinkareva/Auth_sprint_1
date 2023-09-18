@@ -3,58 +3,20 @@ from typing import Optional
 import asyncio
 
 import typer
-from fastapi import Depends
-from sqlmodel import select
+from sqlmodel import create_engine
+from sqlmodel.ext.asyncio.session import AsyncEngine
 from typing_extensions import Annotated
-from psycopg2.errorcodes import UNIQUE_VIOLATION
-from psycopg2 import errors
 
+
+from src.db import postgres
 from src.db.postgres import get_session
-from src.models.role import Role
-from src.models.user import User
-from src.models.user_roles import UserRoles
-from src.services.role import role_services, RoleService
+from src.db.redis import get_redis
+from src.services.role import role_services
 from src.services.auth import get_auth_service
 from src.models.data import UserSingUp
+from src.settings import settings
 
-async def get_session():
-    app = typer.Typer()
-    role_service = RoleService(get_session())
-    auth = get_auth_service(get_session())
-
-
-
-def add_model(model):
-    with get_session_sync() as session:
-        try:
-            session.add(model)
-            session.commit()
-        except errors.lookup(UNIQUE_VIOLATION):
-            logging.log(logging.INFO, f'{model.__repr__()} had been already created')
-        else:
-            logging.log(logging.INFO, f'Create {model}')
-
-
-def get_user(login: str) -> User:
-    with get_session_sync() as session:
-        try:
-            user = select(User).where(User.login == login)
-            result = session.exec(user)
-        except BaseException as e:
-            logging.log(logging.ERROR, e)
-        else:
-            return result.first()
-
-
-def get_role(role: str) -> Role:
-    with get_session_sync() as session:
-        try:
-            user = select(Role).where(Role.name == role)
-            result = session.exec(user)
-        except BaseException as e:
-            logging.log(logging.ERROR, e)
-        else:
-            return result.first()
+app = typer.Typer()
 
 
 @app.command()
@@ -78,20 +40,24 @@ async def create_user_async(login: str,
     """
     Create a new user with USERNAME.
     """
-    pg = role_services(get_session())
+    async_session_role = get_session()
+    async_session_auth = get_session()
+    role_service = role_services(await async_session_role.__anext__())
+    auth_service = get_auth_service(pg=await async_session_auth.__anext__(), redis=await get_redis())
     user = UserSingUp(login=login,
                       password=password,
                       email=email,
                       first_name=first_name,
                       last_name=last_name,
                       )
-    if await pg.exist_user(login):
+
+    if await role_service.exist_user(login):
         logging.error('User has already been created')
     else:
-        await auth.add_user(user)
-        exist = pg.exist_role(role)
+        await auth_service.add_user(user)
+        exist = await role_service.exist_role(role)
         if role is not None and exist:
-            await pg.set_user_role(login, role)
+            await role_service.set_user_role(login, role)
         elif not exist:
             logging.error('Role not found')
         else:
@@ -104,6 +70,7 @@ def create_role(name: str, description: str):
 
 
 async def create_role_async(name: str, description: str):
+    role_service = role_services([item async for item in get_session()][0])
     if await role_service.exist_role(name):
         logging.log(logging.ERROR, "Role has already been created")
     else:
@@ -116,6 +83,7 @@ def set_role(login: str, role: str):
 
 
 async def set_role_async(login: str, role: str):
+    role_service = role_services([item async for item in get_session()][0])
     if not await role_service.exist_role(role):
         logging.log(logging.ERROR, "Role not found")
     elif not await role_service.exist_user(login):
@@ -125,4 +93,7 @@ async def set_role_async(login: str, role: str):
 
 
 if __name__ == "__main__":
+    postgres.engine = AsyncEngine(
+        create_engine(settings.pg_url(), echo=True, future=True)
+    )
     app()
