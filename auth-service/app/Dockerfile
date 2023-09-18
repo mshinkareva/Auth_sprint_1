@@ -13,15 +13,17 @@ RUN apt update -y \
 WORKDIR /home/src
 
 COPY requirements.txt /home
+
+RUN pip install --upgrade pip \
+    && pip install -r /home/requirements.txt
+
+
 COPY entrypoint.sh /home
 COPY pytest.ini /home
 
 COPY src/ /home/src
 COPY tests/ /home/tests/
 
-
-RUN pip install --upgrade pip \
-    && pip install -r /home/requirements.txt
 
 RUN chmod +x /home/entrypoint.sh
 
