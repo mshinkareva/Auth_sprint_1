@@ -22,12 +22,7 @@ def backoff(exceptions=Exception, start_sleep_time=1, factor=2, border_sleep_tim
                     if value:
                         return value
                     _tries += 1
-                    mdelay = start_sleep_time * (factor**_tries)
-
-                    if mdelay >= border_sleep_time:
-                        mdelay = border_sleep_time
-
-                    time.sleep(mdelay)
+                    time.sleep(1)
 
                 except exceptions as ex:
                     _tries -= 1

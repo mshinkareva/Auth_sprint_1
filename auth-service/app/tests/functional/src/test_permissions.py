@@ -2,8 +2,6 @@ import pytest
 
 from src.models.permission import Permission
 
-PAGE_SIZE = 50
-
 
 @pytest.mark.asyncio
 async def test_post_permissions(make_post_request, make_get_request, make_permission):

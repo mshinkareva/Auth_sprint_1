@@ -14,6 +14,10 @@ class UserSingUp(BaseModel):
         orm_mode = True
 
 
+class UserInDb(UserSingUp):
+    pass
+
+
 class UserLogin(BaseModel):
     login: str
     password: str
