@@ -20,7 +20,7 @@ echo "PG started"
 
 alembic upgrade head
 
-python cli.pu create-role admin admin
+python cli.py create-role admin admin
 python cli.py create-user $ROOT_LOGIN $ROOT_PASSWORD $ROOT_EMAIL $ROOT_FIRST_NAME $ROOT_LAST_NAME admin
 
 
