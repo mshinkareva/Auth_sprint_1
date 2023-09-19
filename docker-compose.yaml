@@ -16,7 +16,6 @@ services:
     logging: *default-logging
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    ports: [ "5432:5432" ]
 
 
   redis_db:
@@ -24,7 +23,6 @@ services:
     container_name: redis
     restart: always
     logging: *default-logging
-    ports: [ "6379:6379" ]
 
   auth_service_app:
     build: ./auth-service/app
