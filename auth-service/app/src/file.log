@@ -1,5 +1,0 @@
-2023-09-19 19:47:06 INFO     [auth.py         :24   ] /signup - login: string
-2023-09-19 19:47:06 INFO     [auth.py         :33   ] /signup - email: user@example.com
-2023-09-19 19:47:06 INFO     [auth.py         :47   ] /signup - user: string
-2023-09-19 19:47:06 WARNING  [auth.py         :56   ] ❌ ❌ ❌ id=UUID('f955a41d-f907-41a8-92b0-c8b18c908658') login='string' password='pbkdf2:sha256:600000$Mnx6ArXOjSDXcboH$9773c7d5080c7fac63fdb41a4cc1b253d9b33e5275f346a11815620c6f9056d5' first_name='string' last_name='string' email='user@example.com' created_at=datetime.datetime(2023, 9, 19, 19, 46, 20, 968360)
-2023-09-19 19:47:06 INFO     [auth.py         :40   ] Signup successful for login: string
