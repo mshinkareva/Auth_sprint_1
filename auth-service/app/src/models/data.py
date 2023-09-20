@@ -14,8 +14,13 @@ class UserSingUp(BaseModel):
         orm_mode = True
 
 
-class UserInDb(UserSingUp):
-    pass
+class UserInDb(BaseModel):
+    login: str
+    email: str
+
+    class Config:
+        orm_mode = True
+
 
 
 class UserLogin(BaseModel):
@@ -71,9 +76,3 @@ class UserRole(BaseModel):
         orm_mode = True
 
 
-class UserInDb(BaseModel):
-    login: str
-    email: str
-
-    class Config:
-        orm_mode = True
