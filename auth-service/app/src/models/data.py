@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr
 
 
 class UserSingUp(BaseModel):
-    login: str
+    login: Optional[str] = None
     password: str
     email: EmailStr
     first_name: Optional[str] = None
@@ -22,9 +22,8 @@ class UserInDb(BaseModel):
         orm_mode = True
 
 
-
 class UserLogin(BaseModel):
-    login: str
+    email: EmailStr
     password: str
 
     class Config:

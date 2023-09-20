@@ -36,7 +36,7 @@ class AuthService:
 
     async def check_password(self, user: UserLogin) -> bool:
         result = await self.pg.execute(
-            select(User.password).where(User.login == user.login)
+            select(User.password).where(User.email == user.email)
         )
         password_hash = result.scalars().first()
         result = check_password_hash(password_hash, user.password)

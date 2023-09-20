@@ -13,12 +13,12 @@ class User(SQLModel, table=True):
         nullable=False,
     )
     login: str = Field(
-        max_length=256, min_length=6, index=True, unique=True, nullable=False
+        max_length=256, min_length=6, index=True, nullable=False
     )
     password: str = Field(max_length=256, min_length=6, nullable=False)
     first_name: str = Field(max_length=50)
     last_name: str = Field(max_length=50)
-    email: EmailStr
+    email: EmailStr = Field(index=True, unique=True, nullable=False)
     created_at: datetime.datetime = datetime.datetime.now()
 
     def __repr__(self) -> str:

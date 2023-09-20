@@ -16,9 +16,11 @@ from src.models.permission import Permission
 from alembic import context
 from dotenv import load_dotenv
 
-load_dotenv(
-    '/Users/mariya.shinkareva/PycharmProjects/Auth_sprint_1/auth-service/env/.env'
-)
+
+BASE_PATH = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())))
+ENV_PATH = os.path.join(BASE_PATH, 'env', '.env')
+
+load_dotenv(ENV_PATH)
 
 
 def get_url():
