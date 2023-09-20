@@ -22,7 +22,6 @@ class UserInDb(BaseModel):
         orm_mode = True
 
 
-
 class UserLogin(BaseModel):
     login: str
     password: str
@@ -74,5 +73,3 @@ class UserRole(BaseModel):
 
     class Config:
         orm_mode = True
-
-

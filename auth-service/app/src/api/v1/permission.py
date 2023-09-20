@@ -34,6 +34,7 @@ async def create_permission(
 
 @router.get(
     '/list',
+    response_model=list[PermissionInDb],
     status_code=HTTPStatus.OK,
     tags=['permissions'],
     description='List Permissions',
@@ -42,13 +43,7 @@ async def create_permission(
 async def get_permission(
     service: PermissionService = Depends(permission_services),
 ) -> list[PermissionInDb]:
-    result = await service.get_permissions()
-    if not result:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Permission not exist'
-        )
-
-    return [PermissionInDb(name=it.name, description=it.description) for it in result]
+    return await service.get_permissions()
 
 
 @router.delete(
