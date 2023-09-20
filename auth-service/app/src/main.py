@@ -43,7 +43,9 @@ async def startup():
     await FastAPILimiter.init(redis.redis)
 
     postgres.engine = AsyncEngine(
-        create_engine(settings.pg_url(), echo=True, future=True)
+        create_engine(
+            settings.pg_url(), echo=settings.postgres_engine_echo, future=True
+        )
     )
 
 
