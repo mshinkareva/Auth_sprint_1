@@ -1,7 +1,9 @@
 from functools import lru_cache
+from typing import Optional
 
 from fastapi import Depends
 from sqlalchemy import delete
+from sqlalchemy.engine import ScalarResult
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -38,13 +40,10 @@ class PermissionService:
 
         return True
 
-    async def get_permissions(self) -> list[PermissionInDb]:
+    async def get_permissions(self) -> list[Permission]:
         logger.info("Start get_permissions")
         data = await self.pg.execute(select(Permission))
-        return [
-            PermissionInDb(name=it.name, description=it.description)
-            for it in data.scalars()
-        ]
+        return list(data.scalars())
 
     async def delete_permission(self, name: str) -> bool:
         logger.info("Start delete_permission")

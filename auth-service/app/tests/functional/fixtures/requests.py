@@ -22,7 +22,7 @@ def make_get_request(client):
 
 @pytest_asyncio.fixture
 def make_post_request(client):
-    sleep(5)
+    # sleep(5)
 
     async def inner(api_url: str, query_data: dict):
         response = await client.post(url=api_url, json=query_data)

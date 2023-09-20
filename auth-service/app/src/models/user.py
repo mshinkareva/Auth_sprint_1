@@ -1,7 +1,8 @@
 import datetime
-from sqlmodel import SQLModel, Field
-from pydantic import EmailStr
 import uuid as uuid_pkg
+
+from pydantic import EmailStr
+from sqlmodel import SQLModel, Field
 
 
 class User(SQLModel, table=True):

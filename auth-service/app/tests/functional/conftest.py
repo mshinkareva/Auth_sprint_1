@@ -30,5 +30,5 @@ def make_user(timestamp):
         'password': f'user_{timestamp}',
         'email': f'user_{timestamp}@example.com',
         'first_name': f'user_{timestamp}',
-        'last_name': f'user_{timestamp}'
+        'last_name': f'user_{timestamp}',
     }

@@ -11,6 +11,7 @@ from src.services.auth import AuthService, get_auth_service
 
 router = APIRouter()
 
+
 @router.post(
     '/signup',
     status_code=HTTPStatus.OK,
@@ -67,9 +68,7 @@ async def login(
         )
     try:
         await auth_service.check_password(user=user)
-        refresh_token = await auth_service.create_refresh_token(
-            user_found.email
-        )
+        refresh_token = await auth_service.create_refresh_token(user_found.email)
         refresh_jti = await auth_service.auth.get_jti(refresh_token)
         access_token = await auth_service.create_access_token(
             user_found.email, {"refresh_jti": refresh_jti}
@@ -134,6 +133,4 @@ async def refresh_token(
     new_access_token = await auth_service.create_access_token(payload=jwt_subject)
     new_refresh_token = await auth_service.create_access_token(payload=jwt_subject)
 
-    return LoginResponse(
-        access_token=new_access_token, refresh_token=new_refresh_token
-    )
+    return LoginResponse(access_token=new_access_token, refresh_token=new_refresh_token)

@@ -1,10 +1,11 @@
 import logging
 
 import uvicorn
+from async_fastapi_jwt_auth import AuthJWT
 from fastapi import FastAPI, Depends
 from fastapi.responses import ORJSONResponse
-from async_fastapi_jwt_auth import AuthJWT
-from pydantic import BaseModel
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 from redis.asyncio import Redis
 from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncEngine
@@ -12,7 +13,6 @@ from sqlmodel.ext.asyncio.session import AsyncEngine
 from src.api.v1 import auth, permission, role, user
 from src.core.logger import LOGGING
 from src.db import redis, postgres
-from src.ratelimiter import RateLimiter
 from src.settings import settings
 
 app = FastAPI(
@@ -21,7 +21,7 @@ app = FastAPI(
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,
-    dependencies=[Depends(RateLimiter(times=2, seconds=5))],
+    dependencies=[Depends(RateLimiter(times=10, seconds=25))],
 )
 
 
@@ -40,6 +40,7 @@ async def check_if_token_in_denylist(decrypted_token):
 @app.on_event('startup')
 async def startup():
     redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
+    await FastAPILimiter.init(redis.redis)
 
     postgres.engine = AsyncEngine(
         create_engine(settings.pg_url(), echo=True, future=True)

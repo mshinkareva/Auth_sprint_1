@@ -11,7 +11,6 @@ from src.services.user import UserService, users_services
 router = APIRouter()
 
 
-
 @router.get(
     '/list',
     status_code=HTTPStatus.OK,
@@ -28,6 +27,7 @@ async def get_users(
 
     return [UserInDb(login=user.login, email=user.email) for user in result]
 
+
 @router.get(
     '/',
     status_code=HTTPStatus.OK,
@@ -36,12 +36,10 @@ async def get_users(
     summary="Получить пользователя",
 )
 async def get_user(
-    user: str, service: UserService = Depends(users_services),
+    user: str,
+    service: UserService = Depends(users_services),
 ) -> UserInDb:
     result = await service.get_user(login=user)
     if not result:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='user not exist'
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='user not exist')
     return result
-
