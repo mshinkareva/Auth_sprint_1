@@ -12,6 +12,7 @@ from src.db.postgres import get_session
 from src.db.redis import get_redis
 from src.models.data import UserSingUp, UserLogin
 from src.models.user import User
+from src.models.user_roles import UserRoles
 from src.services.const import CACHE_EXPIRE_REFRESH_TOKEN
 from src.settings import settings
 
@@ -54,6 +55,8 @@ class AuthService:
         logger.warning(f'❌ ❌ ❌ {user_signup}')
 
         self.pg.add(user_signup)
+        user_role = UserRoles(user_login=user.login, user_role='registered')
+        self.pg.add(user_role)
         await self.pg.commit()
 
     async def add_jwt_to_redis(self, jwt_val: str):

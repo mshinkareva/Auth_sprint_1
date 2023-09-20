@@ -57,6 +57,13 @@ class RoleService:
 
         return bool(found)
 
+    async def get_user_role(self, login: str) -> UserRoles:
+        result = await self.pg.execute(
+            select(UserRoles).where(UserRoles.user_login == login)
+        )
+        return result.scalars().first()
+
+
     async def exist_user_role(self, login: str) -> bool:
         result = await self.pg.execute(
             select(UserRoles).where(UserRoles.user_login == login)
