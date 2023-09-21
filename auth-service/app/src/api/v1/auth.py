@@ -8,6 +8,7 @@ from src.api.v1.schemas.auth import LoginResponse
 from src.core.config import logger
 from src.models.data import UserSingUp, UserLogin
 from src.services.auth import AuthService, get_auth_service
+from src.services.role import RoleService, role_services
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ router = APIRouter()
     summary="Регистрация нового пользователя",
 )
 async def register(
-    user_create: UserSingUp, auth_service: AuthService = Depends(get_auth_service)
+    user_create: UserSingUp, auth_service: AuthService = Depends(get_auth_service),
 ) -> HTTPStatus:
     logger.info(f"/signup - login: {user_create.login}")
     user_found = await auth_service.get_by_login(user_create.login)
@@ -56,6 +57,7 @@ async def register(
 async def login(
     user: UserLogin,
     auth_service: AuthService = Depends(get_auth_service),
+    role_services: RoleService = Depends(role_services),
 ) -> LoginResponse | Response:
     logger.info(f"/login user - login: {user.login}")
     user_found = await auth_service.get_by_login(user.login)
@@ -70,8 +72,9 @@ async def login(
         await auth_service.check_password(user=user)
         refresh_token = await auth_service.create_refresh_token(user_found.email)
         refresh_jti = await auth_service.auth.get_jti(refresh_token)
+        role = await role_services.get_user_role(user.login)
         access_token = await auth_service.create_access_token(
-            user_found.email, {"refresh_jti": refresh_jti}
+            user_found.email, {"refresh_jti": refresh_jti, "role": role.user_role}
         )
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
     except ValueError as ex:
