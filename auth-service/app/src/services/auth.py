@@ -12,14 +12,13 @@ from src.db.postgres import get_session
 from src.db.redis import get_redis
 from src.models.data import UserSingUp, UserLogin
 from src.models.user import User
+from src.models.user_roles import UserRoles
 from src.services.const import CACHE_EXPIRE_REFRESH_TOKEN
 from src.settings import settings
 
 
 class AuthService:
-    def __init__(
-        self, redis: Redis, pg: AsyncSession, auth: AuthJWT
-    ):
+    def __init__(self, redis: Redis, pg: AsyncSession, auth: AuthJWT):
         self.redis = redis
         self.pg = pg
         self.auth = auth
@@ -56,6 +55,8 @@ class AuthService:
         logger.warning(f'❌ ❌ ❌ {user_signup}')
 
         self.pg.add(user_signup)
+        user_role = UserRoles(user_login=user.login, user_role='registered')
+        self.pg.add(user_role)
         await self.pg.commit()
 
     async def add_jwt_to_redis(self, jwt_val: str):
@@ -69,11 +70,17 @@ class AuthService:
             await self.add_jwt_to_redis(refresh_jti)
 
     async def create_access_token(self, payload: str, user_claims: Optional[dict] = {}):
-        access_token = await self.auth.create_access_token(payload, user_claims=user_claims)
+        access_token = await self.auth.create_access_token(
+            payload, user_claims=user_claims
+        )
         return access_token
 
-    async def create_refresh_token(self, payload: str, user_claims: Optional[dict] = {}):
-        refresh_token = await self.auth.create_refresh_token(payload, user_claims=user_claims)
+    async def create_refresh_token(
+        self, payload: str, user_claims: Optional[dict] = {}
+    ):
+        refresh_token = await self.auth.create_refresh_token(
+            payload, user_claims=user_claims
+        )
         return refresh_token
 
     async def check_token_is_expired(self, login: str, jwt_val: str) -> bool:
@@ -85,6 +92,6 @@ class AuthService:
 def get_auth_service(
     redis: Redis = Depends(get_redis),
     pg: AsyncSession = Depends(get_session),
-    auth: AuthJWT = Depends()
+    auth: AuthJWT = Depends(),
 ) -> AuthService:
     return AuthService(redis, pg, auth)

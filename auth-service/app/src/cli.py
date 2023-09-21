@@ -20,36 +20,41 @@ app = typer.Typer()
 
 
 @app.command()
-def create_user(login: str,
-                password: str,
-                email: str,
-                first_name: Annotated[Optional[str], typer.Argument()] = 'Admin',
-                last_name: Annotated[Optional[str], typer.Argument()] = 'Super',
-                role: Annotated[Optional[str], typer.Argument()] = None,
-                ):
+def create_user(
+    login: str,
+    password: str,
+    email: str,
+    first_name: Annotated[Optional[str], typer.Argument()] = 'Admin',
+    last_name: Annotated[Optional[str], typer.Argument()] = 'Super',
+    role: Annotated[Optional[str], typer.Argument()] = None,
+):
     asyncio.run(create_user_async(login, password, email, first_name, last_name, role))
 
 
-async def create_user_async(login: str,
-                            password: str,
-                            email: str,
-                            first_name: str = 'Admin',
-                            last_name: str = 'Super',
-                            role: str = None,
-                            ):
+async def create_user_async(
+    login: str,
+    password: str,
+    email: str,
+    first_name: str = 'Admin',
+    last_name: str = 'Super',
+    role: str = None,
+):
     """
     Create a new user with USERNAME.
     """
     async_session_role = get_session()
     async_session_auth = get_session()
     role_service = role_services(await async_session_role.__anext__())
-    auth_service = get_auth_service(pg=await async_session_auth.__anext__(), redis=await get_redis())
-    user = UserSingUp(login=login,
-                      password=password,
-                      email=email,
-                      first_name=first_name,
-                      last_name=last_name,
-                      )
+    auth_service = get_auth_service(
+        pg=await async_session_auth.__anext__(), redis=await get_redis()
+    )
+    user = UserSingUp(
+        login=login,
+        password=password,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+    )
 
     if await role_service.exist_user(login):
         logging.error('User has already been created')

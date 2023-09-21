@@ -17,20 +17,21 @@ class UserService:
     async def get_users(self) -> list[UserInDb]:
         logger.info("Start get_users")
         data = await self.pg.execute(select(User))
-        return [
-            UserInDb(login=user.login, email=user.email)
-            for user in data.scalars()
-        ]
+        return [UserInDb(login=user.login, email=user.email) for user in data.scalars()]
 
     async def get_user(self, login) -> UserInDb:
         logger.info("Start get_user")
         result = await self.pg.execute(select(User).where(User.login == login))
         user_found = result.scalars().first()
-        return UserInDb(login=user_found.login, email=user_found.email) if user_found else None
+        return (
+            UserInDb(login=user_found.login, email=user_found.email)
+            if user_found
+            else None
+        )
 
 
 @lru_cache()
 def users_services(
-        pg: AsyncSession = Depends(get_session),
+    pg: AsyncSession = Depends(get_session),
 ) -> UserService:
     return UserService(pg=pg)

@@ -8,8 +8,10 @@ from src.api.v1.schemas.auth import LoginResponse
 from src.core.config import logger
 from src.models.data import UserSingUp, UserLogin
 from src.services.auth import AuthService, get_auth_service
+from src.services.role import RoleService, role_services
 
 router = APIRouter()
+
 
 @router.post(
     '/signup',
@@ -19,7 +21,7 @@ router = APIRouter()
     summary="Регистрация нового пользователя",
 )
 async def register(
-    user_create: UserSingUp, auth_service: AuthService = Depends(get_auth_service)
+    user_create: UserSingUp, auth_service: AuthService = Depends(get_auth_service),
 ) -> Response:
     user_found = await auth_service.get_by_mail(user_create.email)
     logger.info(f"/signup - email: {user_create.email}")
@@ -47,6 +49,7 @@ async def register(
 async def login(
     user: UserLogin,
     auth_service: AuthService = Depends(get_auth_service),
+    role_services: RoleService = Depends(role_services),
 ) -> LoginResponse | Response:
     logger.info(f"/login user - email: {user.email}")
     user_found = await auth_service.get_by_mail(user.email)
@@ -59,12 +62,11 @@ async def login(
         )
     try:
         await auth_service.check_password(user=user)
-        refresh_token = await auth_service.create_refresh_token(
-            user_found.email
-        )
+        refresh_token = await auth_service.create_refresh_token(user_found.email)
         refresh_jti = await auth_service.auth.get_jti(refresh_token)
+        role = await role_services.get_user_role(user.login)
         access_token = await auth_service.create_access_token(
-            user_found.email, {"refresh_jti": refresh_jti}
+            user_found.email, {"refresh_jti": refresh_jti, "role": role.user_role}
         )
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
     except ValueError as ex:
@@ -126,6 +128,4 @@ async def refresh_token(
     new_access_token = await auth_service.create_access_token(payload=jwt_subject)
     new_refresh_token = await auth_service.create_access_token(payload=jwt_subject)
 
-    return LoginResponse(
-        access_token=new_access_token, refresh_token=new_refresh_token
-    )
+    return LoginResponse(access_token=new_access_token, refresh_token=new_refresh_token)

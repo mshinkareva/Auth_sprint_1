@@ -73,5 +73,3 @@ class UserRole(BaseModel):
 
     class Config:
         orm_mode = True
-
-

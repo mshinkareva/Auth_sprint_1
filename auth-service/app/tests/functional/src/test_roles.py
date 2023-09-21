@@ -1,5 +1,3 @@
-from time import sleep
-
 import pytest
 
 from src.models.role import Role
@@ -12,4 +10,3 @@ async def test_post_role(make_post_request, make_get_request, make_role):
     roles = [Role(**data) for data in role_raw]
     new_role = Role(**make_role)
     assert new_role in roles
-
