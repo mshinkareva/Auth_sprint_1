@@ -21,15 +21,13 @@ class UserService:
         data = await self.pg.execute(select(User).options(selectinload(User.roles)))
         return data.scalars().all()
 
-    async def get_user(self, login) -> UserInDb:
+    async def get_user(self, login) -> User:
         logger.info("Start get_user")
-        result = await self.pg.execute(select(User).where(User.login == login))
-        user_found = result.scalars().first()
-        return (
-            UserInDb(login=user_found.login, email=user_found.email)
-            if user_found
-            else None
+        result = await self.pg.execute(
+            select(User).where(User.login == login).options(selectinload(User.roles))
         )
+        user_found = result.scalars().first()
+        return user_found if user_found else None
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> User:
         logger.info("Start get_user_by_id")
