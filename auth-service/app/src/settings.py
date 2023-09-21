@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     postgres_host: str = ...
     postgres_port: str = ...
 
+    postgres_engine_echo: bool = False
+
     authjwt_secret_key: str = "secretfghjrtyui"
     authjwt_denylist_enabled: bool = True
     authjwt_denylist_token_checks: set = {"access", "refresh"}
