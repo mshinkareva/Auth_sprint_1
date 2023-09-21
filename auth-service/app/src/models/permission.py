@@ -11,7 +11,7 @@ class Permission(SQLModel, table=True):
         unique=True,
         nullable=False,
     )
-    name: str = Field(max_length=256, min_length=6, nullable=False)
+    name: str = Field(max_length=256, min_length=6, nullable=False, unique=True)
     description: str = Field(max_length=256, min_length=6)
 
     def __repr__(self) -> str:

@@ -1,16 +1,13 @@
 import uuid as uuid_pkg
+from typing import Optional
 
 from sqlmodel import SQLModel, Field
 
 
 class UserRoles(SQLModel, table=True):
-    id: uuid_pkg.UUID = Field(
-        default=uuid_pkg.uuid4(),
-        primary_key=True,
-        index=True,
-        unique=True,
-        nullable=False,
+    user_id: Optional[uuid_pkg.UUID] = Field(
+        default=None, foreign_key="user.id", primary_key=True
     )
-
-    user_login: str = Field(max_length=256, min_length=5, nullable=False)
-    user_role: str = Field(max_length=256, min_length=5, nullable=False)
+    role_id: Optional[uuid_pkg.UUID] = Field(
+        default=None, foreign_key="role.id", primary_key=True
+    )

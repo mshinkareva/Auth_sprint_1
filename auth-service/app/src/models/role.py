@@ -1,6 +1,9 @@
 import uuid as uuid_pkg
+from typing import List
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+from src.models.role_permission import RolePermission
+from src.models.permission import Permission
 
 
 class Role(SQLModel, table=True):
@@ -13,6 +16,10 @@ class Role(SQLModel, table=True):
     )
     name: str = Field(max_length=256, min_length=5, nullable=False, unique=True)
     description: str = Field(max_length=256, min_length=5)
+
+    permissions: List[Permission] = Relationship(
+        back_populates="roles", link_model=RolePermission
+    )
 
     def __repr__(self) -> str:
         return f'<Role {self.name}>'
