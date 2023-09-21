@@ -22,15 +22,7 @@ router = APIRouter()
 )
 async def register(
     user_create: UserSingUp, auth_service: AuthService = Depends(get_auth_service),
-) -> HTTPStatus:
-    logger.info(f"/signup - login: {user_create.login}")
-    user_found = await auth_service.get_by_login(user_create.login)
-    if user_found:
-        logger.info(f"/signup - login: {user_create.login}, found")
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Username is taken'
-        )
-
+) -> Response:
     user_found = await auth_service.get_by_mail(user_create.email)
     logger.info(f"/signup - email: {user_create.email}")
     if user_found:
@@ -40,7 +32,7 @@ async def register(
     try:
         await auth_service.add_user(user=user_create)
         logger.info(f"Signup successful for login: {user_create.login}")
-        return HTTPStatus.CREATED
+        return Response(status_code=HTTPStatus.CREATED)
     except Exception as ex:
         logger.error(f"Signup failed due to error: {ex}")
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(ex))
@@ -59,10 +51,10 @@ async def login(
     auth_service: AuthService = Depends(get_auth_service),
     role_services: RoleService = Depends(role_services),
 ) -> LoginResponse | Response:
-    logger.info(f"/login user - login: {user.login}")
-    user_found = await auth_service.get_by_login(user.login)
+    logger.info(f"/login user - email: {user.email}")
+    user_found = await auth_service.get_by_mail(user.email)
     if user_found:
-        logger.info(f"/login user - login: {user.login}, found")
+        logger.info(f"/login user - email: {user.email}, found")
     else:
         logger.error("user not found")
         return Response(
