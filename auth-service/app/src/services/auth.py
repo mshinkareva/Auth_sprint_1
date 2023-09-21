@@ -4,6 +4,7 @@ from typing import Optional
 from async_fastapi_jwt_auth import AuthJWT
 from fastapi import Depends
 from redis.asyncio import Redis
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,9 +12,8 @@ from src.core.config import logger
 from src.db.postgres import get_session
 from src.db.redis import get_redis
 from src.models.data import UserSingUp, UserLogin
+from src.models.role import Role
 from src.models.user import User
-from src.models.user_roles import UserRoles
-from src.services.const import CACHE_EXPIRE_REFRESH_TOKEN
 from src.settings import settings
 
 
@@ -24,12 +24,15 @@ class AuthService:
         self.auth = auth
 
     async def get_by_login(self, login: str) -> User | None:
-        result = await self.pg.execute(select(User).where(User.login == login))
+        result = await self.pg.execute(
+            select(User).where(User.login == login).options(selectinload(User.roles))
+        )
         user_found = result.scalars().first()
         return user_found if user_found else None
 
     async def get_by_mail(self, mail: str) -> User | None:
-        result = await self.pg.execute(select(User).where(User.email == mail))
+        result = await self.pg.execute(
+            select(User).where(User.email == mail).options(selectinload(User.roles)))
         user_found = result.scalars().first()
         return user_found if user_found else None
 
@@ -41,7 +44,7 @@ class AuthService:
         result = check_password_hash(password_hash, user.password)
         return bool(result)
 
-    async def add_user(self, user: UserSingUp) -> None:
+    async def add_user(self, user: UserSingUp) -> User:
         hashed_pwd = generate_password_hash(user.password)
         logger.info(f"/signup - user: {user.login}")
         user_signup = User(
@@ -54,10 +57,13 @@ class AuthService:
         # TODO history
         logger.warning(f'❌ ❌ ❌ {user_signup}')
 
+        user_role = await self.pg.execute(select(Role).where(Role.name == "registered"))
+        user_role = user_role.scalars().first()
+
+        user_signup.roles.append(user_role)
         self.pg.add(user_signup)
-        user_role = UserRoles(user_login=user.login, user_role='registered')
-        self.pg.add(user_role)
         await self.pg.commit()
+        return user_signup
 
     async def add_jwt_to_redis(self, jwt_val: str):
         await self.redis.set(jwt_val, "true", settings.access_expires)

@@ -1,15 +1,13 @@
+import uuid
 from functools import lru_cache
-from typing import Optional
 
 from fastapi import Depends
 from sqlalchemy import delete
-from sqlalchemy.engine import ScalarResult
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.config import logger
 from src.db.postgres import get_session
-from src.models.data import PermissionInDb
 from src.models.permission import Permission
 
 
@@ -25,7 +23,7 @@ class PermissionService:
 
         return bool(found)
 
-    async def create_permission(self, name: str, description: str) -> bool:
+    async def create_permission(self, name: str, description: str) -> Permission | bool:
         logger.info("Start create_permission")
 
         if await self.exist_permission(name=name):
@@ -38,21 +36,17 @@ class PermissionService:
 
         logger.info("create_permission ok")
 
-        return True
+        return permission
 
     async def get_permissions(self) -> list[Permission]:
         logger.info("Start get_permissions")
         data = await self.pg.execute(select(Permission))
-        return list(data.scalars())
+        return data.scalars().all()
 
-    async def delete_permission(self, name: str) -> bool:
+    async def delete_permission(self, permission_id: uuid.UUID) -> bool:
         logger.info("Start delete_permission")
-
-        if not await self.exist_permission(name=name):
-            return False
-
         result = await self.pg.execute(
-            delete(Permission).where(Permission.name == name)
+            delete(Permission).where(Permission.id == permission_id)
         )
         await self.pg.commit()
         return bool(result)

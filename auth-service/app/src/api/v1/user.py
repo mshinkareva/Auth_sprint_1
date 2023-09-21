@@ -1,11 +1,11 @@
+import uuid
 from http import HTTPStatus
-from typing import Annotated
+from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 
-from src.core.config import logger
+from src.api.v1.schemas.user import UserResponse
 from src.models.user import User
-from src.models.data import UserInDb
 from src.services.user import UserService, users_services
 
 router = APIRouter()
@@ -17,15 +17,16 @@ router = APIRouter()
     tags=['user'],
     description='Users',
     summary="Список пользователей",
+    response_model=List[UserResponse]
 )
 async def get_users(
     service: UserService = Depends(users_services),
-) -> list[UserInDb]:
+) -> list[User]:
     result = await service.get_users()
     if not result:
         return []
 
-    return [UserInDb(login=user.login, email=user.email) for user in result]
+    return result
 
 
 @router.get(
@@ -34,12 +35,13 @@ async def get_users(
     tags=['user'],
     description='User',
     summary="Получить пользователя",
+    response_model=UserResponse
 )
 async def get_user(
-    user: str,
+    user_id: uuid.UUID,
     service: UserService = Depends(users_services),
-) -> UserInDb:
-    result = await service.get_user(login=user)
+) -> User:
+    result = await service.get_user_by_id(user_id)
     if not result:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='user not exist')
     return result

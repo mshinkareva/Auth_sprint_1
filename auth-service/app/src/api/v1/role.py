@@ -1,10 +1,15 @@
+import uuid
 from http import HTTPStatus
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from src.models.data import RoleInDb, RoleCreate, UserRole
+from src.api.v1.schemas.user import UserResponse
+from src.models.data import RoleCreate, UserRole
+from src.models.role import Role
+from src.models.user import User
 from src.services.role import RoleService, role_services
+from src.services.user import UserService, users_services
 
 router = APIRouter()
 
@@ -15,14 +20,16 @@ router = APIRouter()
     tags=['roles'],
     description='Create new Role',
     summary="Создать роль",
+    response_model=Role,
 )
 async def create_role(
-    role: RoleCreate, service: RoleService = Depends(role_services)
-) -> RoleInDb:
+    role: RoleCreate,
+    service: RoleService = Depends(role_services),
+) -> Role:
     role = await service.create_role(name=role.name, description=role.description)
     if not role:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role is taken')
-    return RoleInDb.parse_obj(role)
+    return role
 
 
 @router.get(
@@ -31,13 +38,14 @@ async def create_role(
     tags=['roles'],
     description='List Roles',
     summary="Список ролей",
+    response_model=List[Role],
 )
-async def get_role(service: RoleService = Depends(role_services)) -> list[RoleInDb]:
+async def get_role(service: RoleService = Depends(role_services)) -> list[Role]:
     result = await service.get_roles()
     if not result:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role not exist')
 
-    return [RoleInDb(name=it.name, description=it.description) for it in result]
+    return result
 
 
 @router.delete(
@@ -48,10 +56,10 @@ async def get_role(service: RoleService = Depends(role_services)) -> list[RoleIn
     summary="Удалить роль",
 )
 async def delete_role(
-    name: Annotated[str, Query(alias='name')],
+    role_id: Annotated[uuid.UUID, Query()],
     service: RoleService = Depends(role_services),
 ) -> None:
-    result = await service.delete_role(name=name)
+    result = await service.delete_role(role_id=role_id)
 
     if not result:
         raise HTTPException(
@@ -65,16 +73,24 @@ async def delete_role(
     tags=['roles'],
     description='User set Roles',
     summary="Назначить роль user",
+    response_model=UserResponse,
 )
 async def user_set_role(
-    user_role: UserRole, service: RoleService = Depends(role_services)
-) -> bool:
-    role = await service.set_user_role(login=user_role.login, name=user_role.role)
+    user_role: UserRole,
+    role_service: RoleService = Depends(role_services),
+    user_service: UserService = Depends(users_services),
+) -> User:
+    user = await user_service.get_user_by_id(user_role.user_id)
+    if not user:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='User not exist')
 
+    role = await role_service.get_role_by_id(user_role.role_id)
     if not role:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role not exist')
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not exist')
 
-    return True
+    result = await role_service.set_user_role(user, role)
+
+    return result
 
 
 @router.delete(
@@ -83,13 +99,21 @@ async def user_set_role(
     tags=['roles'],
     description='User delete Roles',
     summary="Удалить роль у пользователя user",
+    response_model=UserResponse,
 )
 async def user_delete_role(
-    user_role: UserRole, service: RoleService = Depends(role_services)
-) -> bool:
-    result = await service.delete_user_role(login=user_role.login, role=user_role.role)
+    user_role: UserRole,
+    role_service: RoleService = Depends(role_services),
+    user_service: UserService = Depends(users_services),
+) -> User:
+    user = await user_service.get_user_by_id(user_role.user_id)
+    if not user:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='User not exist')
 
-    if not result:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='User not exist')
+    role = await role_service.get_role_by_id(user_role.role_id)
+    if not role:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not exist')
 
-    return True
+    result = await role_service.delete_user_role(user, role)
+
+    return result
