@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi_pagination import Page
 
 from src.models.data import PermissionCreate
 from src.models.permission import Permission
@@ -36,16 +37,22 @@ async def create_permission(
 
 @router.get(
     '/list',
-    response_model=list[Permission],
+    response_model=Page[Permission],
     status_code=HTTPStatus.OK,
     tags=['permissions'],
     description='List Permissions',
     summary="Список разрешений",
 )
 async def get_permission(
+    page: int = Query(1),
+    items_per_page: int = Query(10),
     service: PermissionService = Depends(permission_services),
-) -> list[Permission]:
-    return await service.get_permissions()
+) -> Page[Permission]:
+    result = await service.get_permissions()
+    skip_pages = page - 1
+    return Page(items=result[skip_pages: skip_pages + items_per_page], total=len(result), page=page, size=items_per_page)
+
+
 
 
 @router.delete(
