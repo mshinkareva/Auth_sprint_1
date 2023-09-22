@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr
@@ -47,6 +48,7 @@ class PermissionInDb(BaseModel):
 
 
 class RoleInDb(BaseModel):
+    id: uuid.UUID
     name: str
     description: str
 
@@ -54,8 +56,12 @@ class RoleInDb(BaseModel):
         orm_mode = True
 
 
-class RoleCreate(RoleInDb):
-    pass
+class RoleCreate(BaseModel):
+    name: str
+    description: str
+
+    class Config:
+        orm_mode = True
 
 
 class RoleUpdate(BaseModel):
@@ -68,8 +74,8 @@ class RoleUpdate(BaseModel):
 
 
 class UserRole(BaseModel):
-    login: str
-    role: str
+    user_id: uuid.UUID
+    role_id: uuid.UUID
 
     class Config:
         orm_mode = True

@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette.responses import Response
 
 from src.api.v1.schemas.auth import LoginResponse
+from src.api.v1.schemas.user import UserResponse
 from src.core.config import logger
 from src.models.data import UserSingUp, UserLogin
+from src.models.user import User
 from src.services.auth import AuthService, get_auth_service
-from src.services.role import RoleService, role_services
 
 router = APIRouter()
 
@@ -19,10 +20,11 @@ router = APIRouter()
     tags=['auth'],
     description='Register new user',
     summary="Регистрация нового пользователя",
+    response_model=UserResponse
 )
 async def register(
     user_create: UserSingUp, auth_service: AuthService = Depends(get_auth_service),
-) -> Response:
+) -> User:
     user_found = await auth_service.get_by_mail(user_create.email)
     logger.info(f"/signup - email: {user_create.email}")
     if user_found:
@@ -30,9 +32,9 @@ async def register(
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Mail is taken')
 
     try:
-        await auth_service.add_user(user=user_create)
+        user = await auth_service.add_user(user=user_create)
         logger.info(f"Signup successful for login: {user_create.login}")
-        return Response(status_code=HTTPStatus.CREATED)
+        return user
     except Exception as ex:
         logger.error(f"Signup failed due to error: {ex}")
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(ex))
@@ -49,7 +51,6 @@ async def register(
 async def login(
     user: UserLogin,
     auth_service: AuthService = Depends(get_auth_service),
-    role_services: RoleService = Depends(role_services),
 ) -> LoginResponse | Response:
     logger.info(f"/login user - email: {user.email}")
     user_found = await auth_service.get_by_mail(user.email)
@@ -64,9 +65,12 @@ async def login(
         await auth_service.check_password(user=user)
         refresh_token = await auth_service.create_refresh_token(user_found.email)
         refresh_jti = await auth_service.auth.get_jti(refresh_token)
-        role = await role_services.get_user_role(user.login)
         access_token = await auth_service.create_access_token(
-            user_found.email, {"refresh_jti": refresh_jti, "role": role.user_role}
+            payload=user_found.email,
+            user_claims={
+                "refresh_jti": refresh_jti,
+                "roles": [role.name for role in user_found.roles],
+            }
         )
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
     except ValueError as ex:
@@ -124,8 +128,13 @@ async def refresh_token(
         return Response(status_code=HTTPStatus.UNAUTHORIZED)
 
     await auth_service.revoke_both_tokens()
-
-    new_access_token = await auth_service.create_access_token(payload=jwt_subject)
     new_refresh_token = await auth_service.create_access_token(payload=jwt_subject)
+    new_access_token = await auth_service.create_access_token(
+        payload=jwt_subject,
+        user_claims={
+            "refresh_jti": new_refresh_token,
+            "roles": [role.name for role in user.roles],
+        }
+    )
 
     return LoginResponse(access_token=new_access_token, refresh_token=new_refresh_token)

@@ -14,6 +14,7 @@ from src.db.redis import get_redis
 from src.services.role import role_services
 from src.services.auth import get_auth_service
 from src.models.data import UserSingUp
+from src.services.user import users_services
 from src.settings import settings
 
 app = typer.Typer()
@@ -56,15 +57,15 @@ async def create_user_async(
         last_name=last_name,
     )
 
-    if await role_service.exist_user(login):
-        logging.error('User has already been created')
+    if await auth_service.get_by_login(login):
+        logging.warning('User has already been created')
     else:
-        await auth_service.add_user(user)
-        exist = await role_service.exist_role(role)
-        if role is not None and exist:
-            await role_service.set_user_role(login, role)
-        elif not exist:
-            logging.error('Role not found')
+        user = await auth_service.add_user(user)
+        if role:
+            role_in_db = await role_service.get_role_by_name(role)
+            await role_service.set_user_role(user, role_in_db)
+        elif not role:
+            logging.error('Role not given')
         else:
             logging.info(f'Role not set for {login}')
 
@@ -76,8 +77,8 @@ def create_role(name: str, description: str):
 
 async def create_role_async(name: str, description: str):
     role_service = role_services([item async for item in get_session()][0])
-    if await role_service.exist_role(name):
-        logging.log(logging.ERROR, "Role has already been created")
+    if await role_service.get_role_by_name(name):
+        logging.log(logging.WARNING, "Role has already been created")
     else:
         await role_service.create_role(name, description)
 
@@ -89,12 +90,15 @@ def set_role(login: str, role: str):
 
 async def set_role_async(login: str, role: str):
     role_service = role_services([item async for item in get_session()][0])
-    if not await role_service.exist_role(role):
+    user_service = users_services(pg=[item async for item in get_session()][0])
+    role = await role_service.get_role_by_name(role)
+    user = await user_service.get_user(login)
+    if not role:
         logging.log(logging.ERROR, "Role not found")
-    elif not await role_service.exist_user(login):
+    elif not user:
         logging.log(logging.ERROR, "User not found")
     else:
-        await role_service.set_user_role(login, role)
+        await role_service.set_user_role(user, role)
 
 
 if __name__ == "__main__":

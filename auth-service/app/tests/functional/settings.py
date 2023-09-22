@@ -1,11 +1,13 @@
+import os
+
+from dotenv import load_dotenv
 from pydantic import BaseSettings, Field
 
-import dotenv
 
+BASE_PATH = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())))
+ENV_PATH = os.path.join(BASE_PATH, 'env', '.env')
 
-dotenv.load_dotenv(
-    "/Users/mariya.shinkareva/PycharmProjects/Auth_sprint_1/auth-service/env/.tests.env"
-)
+load_dotenv(ENV_PATH)
 
 
 class TestSettings(BaseSettings):
