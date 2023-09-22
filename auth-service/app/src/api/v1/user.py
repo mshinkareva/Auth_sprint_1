@@ -1,8 +1,8 @@
 import uuid
 from http import HTTPStatus
-from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi_pagination import Page
 
 from src.api.v1.schemas.user import UserResponse
 from src.models.user import User
@@ -17,16 +17,16 @@ router = APIRouter()
     tags=['user'],
     description='Users',
     summary="Список пользователей",
-    response_model=List[UserResponse]
+    response_model=Page[UserResponse]
 )
 async def get_users(
+    page: int = Query(1),
+    items_per_page: int = Query(10),
     service: UserService = Depends(users_services),
-) -> list[User]:
+) -> Page[User]:
     result = await service.get_users()
-    if not result:
-        return []
-
-    return result
+    skip_pages = page - 1
+    return Page(items=result[skip_pages: skip_pages + items_per_page], total=len(result), page=page, size=items_per_page)
 
 
 @router.get(

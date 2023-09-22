@@ -1,8 +1,9 @@
 import uuid
 from http import HTTPStatus
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi_pagination import Page
 
 from src.api.v1.schemas.user import UserResponse
 from src.models.data import RoleCreate, UserRole
@@ -38,14 +39,19 @@ async def create_role(
     tags=['roles'],
     description='List Roles',
     summary="Список ролей",
-    response_model=List[Role],
+    response_model=Page[Role],
 )
-async def get_role(service: RoleService = Depends(role_services)) -> list[Role]:
+async def get_role(
+        page: int = Query(1),
+        items_per_page: int = Query(10),
+        service: RoleService = Depends(role_services)) -> Page[Role]:
     result = await service.get_roles()
     if not result:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role not exist')
+    skip_pages = page - 1
+    return Page(items=result[skip_pages: skip_pages + items_per_page], total=len(result), page=page, size=items_per_page)
 
-    return result
+
 
 
 @router.delete(
