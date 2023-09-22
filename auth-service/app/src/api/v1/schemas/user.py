@@ -17,4 +17,4 @@ class UserResponse(ModelWithConf):
     email: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    roles: List[Role]
+    roles: List[Role] = []

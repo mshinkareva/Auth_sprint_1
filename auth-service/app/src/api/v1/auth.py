@@ -66,7 +66,11 @@ async def login(
         refresh_token = await auth_service.create_refresh_token(user_found.email)
         refresh_jti = await auth_service.auth.get_jti(refresh_token)
         access_token = await auth_service.create_access_token(
-            user_found.email, {"refresh_jti": refresh_jti, "role": user_found.roles}
+            payload=user_found.email,
+            user_claims={
+                "refresh_jti": refresh_jti,
+                "roles": [role.name for role in user_found.roles],
+            }
         )
         return LoginResponse(access_token=access_token, refresh_token=refresh_token)
     except ValueError as ex:
@@ -127,7 +131,10 @@ async def refresh_token(
     new_refresh_token = await auth_service.create_access_token(payload=jwt_subject)
     new_access_token = await auth_service.create_access_token(
         payload=jwt_subject,
-        user_claims={"refresh_jti": new_refresh_token, "role": user.roles},
+        user_claims={
+            "refresh_jti": new_refresh_token,
+            "roles": [role.name for role in user.roles],
+        }
     )
 
     return LoginResponse(access_token=new_access_token, refresh_token=new_refresh_token)
