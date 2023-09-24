@@ -8,6 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.postgres import get_session
 from src.models.role import Role
+from sqlalchemy.orm import selectinload
 
 from src.models.user import User
 from src.core.config import logger
@@ -51,6 +52,13 @@ class RoleService:
         await self.pg.commit()
         return user
 
+    async def get_by_login(self, login: str) -> User | None:
+        result = await self.pg.execute(
+            select(User).where(User.login == login).options(selectinload(User.roles))
+        )
+        user_found = result.scalars().first()
+        return user_found if user_found else None
+
     async def delete_user_role(self, user: User, role: Role) -> User:
         logger.info("Delete users role")
         if user.roles:
@@ -64,6 +72,7 @@ class RoleService:
         result = await self.pg.execute(select(Role).where(Role.id == role_id))
         role_found = result.scalars().first()
         return role_found if role_found else None
+
 
 @lru_cache()
 def role_services(

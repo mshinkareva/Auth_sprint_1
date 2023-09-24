@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import Page
 
 from src.api.v1.schemas.user import UserResponse
@@ -14,6 +15,8 @@ from src.services.user import UserService, users_services
 
 router = APIRouter()
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
+
 
 @router.post(
     '/create',
@@ -24,6 +27,7 @@ router = APIRouter()
     response_model=Role,
 )
 async def create_role(
+    token: Annotated[str, Depends(oauth2_scheme)],
     role: RoleCreate,
     service: RoleService = Depends(role_services),
 ) -> Role:
@@ -42,16 +46,21 @@ async def create_role(
     response_model=Page[Role],
 )
 async def get_role(
-        page: int = Query(1),
-        items_per_page: int = Query(10),
-        service: RoleService = Depends(role_services)) -> Page[Role]:
+    token: Annotated[str, Depends(oauth2_scheme)],
+    page: int = Query(1),
+    items_per_page: int = Query(10),
+    service: RoleService = Depends(role_services),
+) -> Page[Role]:
     result = await service.get_roles()
     if not result:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Role not exist')
     skip_pages = page - 1
-    return Page(items=result[skip_pages: skip_pages + items_per_page], total=len(result), page=page, size=items_per_page)
-
-
+    return Page(
+        items=result[skip_pages : skip_pages + items_per_page],
+        total=len(result),
+        page=page,
+        size=items_per_page,
+    )
 
 
 @router.delete(
@@ -62,6 +71,7 @@ async def get_role(
     summary="Удалить роль",
 )
 async def delete_role(
+    token: Annotated[str, Depends(oauth2_scheme)],
     role_id: Annotated[uuid.UUID, Query()],
     service: RoleService = Depends(role_services),
 ) -> None:
@@ -82,6 +92,7 @@ async def delete_role(
     response_model=UserResponse,
 )
 async def user_set_role(
+    token: Annotated[str, Depends(oauth2_scheme)],
     user_role: UserRole,
     role_service: RoleService = Depends(role_services),
     user_service: UserService = Depends(users_services),
@@ -108,6 +119,7 @@ async def user_set_role(
     response_model=UserResponse,
 )
 async def user_delete_role(
+    token: Annotated[str, Depends(oauth2_scheme)],
     user_role: UserRole,
     role_service: RoleService = Depends(role_services),
     user_service: UserService = Depends(users_services),

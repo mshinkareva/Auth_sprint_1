@@ -17,11 +17,10 @@ from src.models.user import User
 from src.settings import settings
 
 
-class AuthService:
-    def __init__(self, redis: Redis, pg: AsyncSession, auth: AuthJWT):
+class AuthServiceBase:
+    def __init__(self, redis: Redis, pg: AsyncSession):
         self.redis = redis
         self.pg = pg
-        self.auth = auth
 
     async def get_by_login(self, login: str) -> User | None:
         result = await self.pg.execute(
@@ -32,16 +31,19 @@ class AuthService:
 
     async def get_by_mail(self, mail: str) -> User | None:
         result = await self.pg.execute(
-            select(User).where(User.email == mail).options(selectinload(User.roles)))
+            select(User).where(User.email == mail).options(selectinload(User.roles))
+        )
         user_found = result.scalars().first()
         return user_found if user_found else None
 
     async def check_password(self, user: UserLogin) -> bool:
+        print(f'🔴️️ User.password {user.password}')
         result = await self.pg.execute(
             select(User.password).where(User.email == user.email)
         )
         password_hash = result.scalars().first()
         result = check_password_hash(password_hash, user.password)
+        print(f'🔴️️ result {result}')
         return bool(result)
 
     async def add_user(self, user: UserSingUp) -> User:
@@ -68,6 +70,16 @@ class AuthService:
     async def add_jwt_to_redis(self, jwt_val: str):
         await self.redis.set(jwt_val, "true", settings.access_expires)
 
+    async def check_token_is_expired(self, login: str, jwt_val: str) -> bool:
+        result = self.redis.get(f'{login}::{jwt_val}')
+        return bool(result)
+
+
+class AuthService(AuthServiceBase):
+    def __init__(self, redis: Redis, pg: AsyncSession, auth: AuthJWT):
+        super().__init__(redis, pg)
+        self.auth = auth
+
     async def revoke_both_tokens(self) -> None:
         refresh_jti = (await self.auth.get_raw_jwt()).get('refresh_jti')
         access_jti = (await self.auth.get_raw_jwt())['jti']
@@ -89,9 +101,13 @@ class AuthService:
         )
         return refresh_token
 
-    async def check_token_is_expired(self, login: str, jwt_val: str) -> bool:
-        result = self.redis.get(f'{login}::{jwt_val}')
-        return bool(result)
+
+@lru_cache()
+def get_auth_service_base(
+    redis: Redis = Depends(get_redis),
+    pg: AsyncSession = Depends(get_session),
+) -> AuthServiceBase:
+    return AuthServiceBase(redis, pg)
 
 
 @lru_cache()
