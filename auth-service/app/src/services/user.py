@@ -8,7 +8,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.config import logger
 from src.db.postgres import get_session
-from src.models.data import UserInDb
 from src.models.user import User
 
 
@@ -36,6 +35,14 @@ class UserService:
         )
         user_found = result.scalars().first()
         return user_found if user_found else None
+
+    async def authenticate_user(self, login: str, password: str):
+        user = await self.get_user(login=login)
+        if not user:
+            return False
+        # if not AuthService().check_password(password, user.hashed_password):
+        #     return False
+        return user
 
 
 @lru_cache()
