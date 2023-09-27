@@ -22,35 +22,35 @@ from src.services.auth import (
 from src.services.role import RoleService, role_services
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 
 
-@router.post("/token", tags=['auth'])
-async def token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    auth_service: AuthServiceBase = Depends(get_auth_service_base),
-    role_service: RoleService = Depends(role_services),
-):
-    try:
-        user = UserLogin(
-            email=EmailStr(form_data.username), password=form_data.password
-        )
-    except pydantic.error_wrappers.ValidationError:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Incorrect username or password'
-        )
-    user_found = await auth_service.get_by_mail(user.email)
-    password = await auth_service.check_password(user)
-
-    if not user_found or not password:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Incorrect username or password'
-        )
-    admin_role = await role_service.get_role_by_name('admin')
-    if admin_role not in user_found.roles:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Incorrect username or password'
-        )
+# @router.post("/token", tags=['auth'])
+# async def token(
+#     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+#     auth_service: AuthServiceBase = Depends(get_auth_service_base),
+#     role_service: RoleService = Depends(role_services),
+# ):
+#     try:
+#         user = UserLogin(
+#             email=EmailStr(form_data.username), password=form_data.password
+#         )
+#     except pydantic.error_wrappers.ValidationError:
+#         raise HTTPException(
+#             status_code=HTTPStatus.BAD_REQUEST, detail='Incorrect username or password'
+#         )
+#     user_found = await auth_service.get_by_mail(user.email)
+#     password = await auth_service.check_password(user)
+#
+#     if not user_found or not password:
+#         raise HTTPException(
+#             status_code=HTTPStatus.BAD_REQUEST, detail='Incorrect username or password'
+#         )
+#     admin_role = await role_service.get_role_by_name('admin')
+#     if admin_role not in user_found.roles:
+#         raise HTTPException(
+#             status_code=HTTPStatus.FORBIDDEN, detail='Incorrect username or password'
+#         )
 
 
 @router.post(
@@ -62,7 +62,6 @@ async def token(
     response_model=UserResponse,
 )
 async def register(
-    token: Annotated[str, Depends(oauth2_scheme)],
     user_create: UserSingUp,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
@@ -90,7 +89,6 @@ async def register(
     response_model=LoginResponse,
 )
 async def login(
-    token: Annotated[str, Depends(oauth2_scheme)],
     user: UserLogin,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     auth_service: AuthService = Depends(get_auth_service),
@@ -160,7 +158,6 @@ async def logout(
     response_model=LoginResponse,
 )
 async def refresh_token(
-    token: Annotated[str, Depends(oauth2_scheme)],
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Response | LoginResponse:
     logger.info("/refresh user - get access and refresh tokens")

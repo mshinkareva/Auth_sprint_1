@@ -15,7 +15,7 @@ from src.services.user import UserService, users_services
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 
 
 @router.post(
