@@ -18,9 +18,14 @@ class UserSingUp(BaseModel):
 class UserInDb(BaseModel):
     login: str
     email: str
+    roles: list
 
     class Config:
         orm_mode = True
+
+    @property
+    def roles_list(self):
+        return [role.name for role in self.roles]
 
 
 class UserLogin(BaseModel):

@@ -7,7 +7,7 @@ import pytest_asyncio
 async def auth_token(client):
     print(f'🔴  response ')
     response = await client.post(
-        "v1/auth/token",
+        "v1/auth/login",
         json={"username": "superuser@gmail.com", "password": "superuser"},
     )
 

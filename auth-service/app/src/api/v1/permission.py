@@ -2,16 +2,15 @@ import uuid
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi_pagination import Page
 
 from src.models.data import PermissionCreate
 from src.models.permission import Permission
+from src.services.auth import requires_admin
 from src.services.permission import PermissionService, permission_services
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
 
 
 @router.post(
@@ -22,8 +21,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
     summary="Создать разрешение",
     response_model=Permission,
 )
+@requires_admin
 async def create_permission(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     permission: PermissionCreate,
     service: PermissionService = Depends(permission_services),
 ) -> Permission:
@@ -68,8 +68,9 @@ async def get_permission(
     description='Delete Permission',
     summary="Удалить разрешение",
 )
+@requires_admin
 async def delete_permission(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     permission_id: Annotated[uuid.UUID, Query()],
     service: PermissionService = Depends(permission_services),
 ) -> None:
