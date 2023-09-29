@@ -1,10 +1,7 @@
 from http import HTTPStatus
-from typing import Annotated
 
-import pydantic
 from async_fastapi_jwt_auth.exceptions import RevokedTokenError
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from pydantic import EmailStr
 from starlette.responses import Response
 
@@ -16,41 +13,10 @@ from src.models.user import User
 from src.services.auth import (
     AuthService,
     get_auth_service,
-    AuthServiceBase,
     get_auth_service_base,
 )
-from src.services.role import RoleService, role_services
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
-
-
-# @router.post("/token", tags=['auth'])
-# async def token(
-#     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-#     auth_service: AuthServiceBase = Depends(get_auth_service_base),
-#     role_service: RoleService = Depends(role_services),
-# ):
-#     try:
-#         user = UserLogin(
-#             email=EmailStr(form_data.username), password=form_data.password
-#         )
-#     except pydantic.error_wrappers.ValidationError:
-#         raise HTTPException(
-#             status_code=HTTPStatus.BAD_REQUEST, detail='Incorrect username or password'
-#         )
-#     user_found = await auth_service.get_by_mail(user.email)
-#     password = await auth_service.check_password(user)
-#
-#     if not user_found or not password:
-#         raise HTTPException(
-#             status_code=HTTPStatus.BAD_REQUEST, detail='Incorrect username or password'
-#         )
-#     admin_role = await role_service.get_role_by_name('admin')
-#     if admin_role not in user_found.roles:
-#         raise HTTPException(
-#             status_code=HTTPStatus.FORBIDDEN, detail='Incorrect username or password'
-#         )
 
 
 @router.post(
@@ -90,11 +56,10 @@ async def register(
 )
 async def login(
     user: UserLogin,
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    auth_service: AuthService = Depends(get_auth_service),
+    auth_service: AuthService = Depends(get_auth_service_base),
 ) -> LoginResponse | Response:
     logger.info(f"/login user - email: {user.email}")
-    user_found = await auth_service.get_by_mail(form_data.username)
+    user_found = await auth_service.get_by_mail(user.email)
     if user_found:
         logger.info(f"/login user - email: {user.email}, found")
     else:
@@ -104,9 +69,7 @@ async def login(
         )
     try:
         await auth_service.check_password(
-            user=UserLogin(
-                email=EmailStr(form_data.username), password=form_data.password
-            )
+            user=UserLogin(email=EmailStr(user.email), password=user.password)
         )
         refresh_token = await auth_service.create_refresh_token(user_found.email)
         refresh_jti = await auth_service.auth.get_jti(refresh_token)
@@ -133,7 +96,6 @@ async def login(
     summary="Выход пользователя из сиcтемы",
 )
 async def logout(
-    token: Annotated[str, Depends(oauth2_scheme)],
     auth_service: AuthService = Depends(get_auth_service),
 ) -> Response:
     logger.info("/logout user - get access and refresh tokens")

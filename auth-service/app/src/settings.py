@@ -1,3 +1,5 @@
+import os
+
 from pydantic import BaseSettings
 
 
@@ -24,4 +26,4 @@ class Settings(BaseSettings):
         return f'postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}'
 
 
-settings = Settings()
+settings = Settings(_env_file=os.getenv('ENV_FILE'))

@@ -2,7 +2,7 @@ import uuid
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_pagination import Page
 
@@ -10,12 +10,11 @@ from src.api.v1.schemas.user import UserResponse
 from src.models.data import RoleCreate, UserRole
 from src.models.role import Role
 from src.models.user import User
+from src.services.auth import requires_admin
 from src.services.role import RoleService, role_services
 from src.services.user import UserService, users_services
 
 router = APIRouter()
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 
 
 @router.post(
@@ -26,8 +25,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
     summary="Создать роль",
     response_model=Role,
 )
+@requires_admin
 async def create_role(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     role: RoleCreate,
     service: RoleService = Depends(role_services),
 ) -> Role:
@@ -46,7 +46,6 @@ async def create_role(
     response_model=Page[Role],
 )
 async def get_role(
-    token: Annotated[str, Depends(oauth2_scheme)],
     page: int = Query(1),
     items_per_page: int = Query(10),
     service: RoleService = Depends(role_services),
@@ -70,8 +69,9 @@ async def get_role(
     description='Delete Roles',
     summary="Удалить роль",
 )
+@requires_admin
 async def delete_role(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     role_id: Annotated[uuid.UUID, Query()],
     service: RoleService = Depends(role_services),
 ) -> None:
@@ -92,7 +92,6 @@ async def delete_role(
     response_model=UserResponse,
 )
 async def user_set_role(
-    token: Annotated[str, Depends(oauth2_scheme)],
     user_role: UserRole,
     role_service: RoleService = Depends(role_services),
     user_service: UserService = Depends(users_services),
@@ -118,8 +117,9 @@ async def user_set_role(
     summary="Удалить роль у пользователя user",
     response_model=UserResponse,
 )
+@requires_admin
 async def user_delete_role(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     user_role: UserRole,
     role_service: RoleService = Depends(role_services),
     user_service: UserService = Depends(users_services),

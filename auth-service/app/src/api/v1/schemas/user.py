@@ -12,9 +12,19 @@ class UserSignUp(ModelWithConf):
     last_name: str
 
 
+class UserInDb(ModelWithConf):
+    login: str
+    email: str
+    role: str
+
+
 class UserResponse(ModelWithConf):
     login: str
     email: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     roles: List[Role] = []
+
+
+class UserShort(ModelWithConf):
+    pass
