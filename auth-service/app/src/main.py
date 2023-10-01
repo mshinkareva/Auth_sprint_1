@@ -9,8 +9,9 @@ from fastapi_limiter.depends import RateLimiter
 from redis.asyncio import Redis
 from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncEngine
+from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.v1 import auth, permission, role, user
+from src.api.v1 import auth, permission, role, user, oauth
 from src.core.logger import LOGGING
 from src.db import redis, postgres
 from src.services.auth import get_current_user_global
@@ -23,6 +24,14 @@ app = FastAPI(
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,
     dependencies=[Depends(RateLimiter(times=10, seconds=25))],
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://127.0.0.1:444"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -54,7 +63,9 @@ async def startup():
 async def shutdown():
     await redis.redis.close()
 
-
+app.include_router(
+    oauth.router, prefix='/api/v1/oauth'
+)
 app.include_router(
     auth.router, prefix='/api/v1/auth', dependencies=[Depends(get_current_user_global)]
 )
@@ -69,6 +80,7 @@ app.include_router(
 app.include_router(
     user.router, prefix='/api/v1/user', dependencies=[Depends(get_current_user_global)]
 )
+
 
 
 if __name__ == '__main__':
