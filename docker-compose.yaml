@@ -17,10 +17,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
-
-  redis_db:
+  redis_db_auth:
     image: redis:latest
-    container_name: redis
+    container_name: redis_auth
     restart: always
     logging: *default-logging
 
@@ -44,7 +43,7 @@ services:
     command: ["nginx", "-g", "daemon off;"]
     volumes:
       - auth_service_nginx_data:/home/data
-    ports: [ "443:443" ]
+    ports: [ "444:443" ]
     links:
       - auth_service_app
 
@@ -75,3 +74,8 @@ volumes:
     driver: local
   auth_tests_data:
     driver: local
+
+networks:
+  default:
+    external:
+      name: shared_network

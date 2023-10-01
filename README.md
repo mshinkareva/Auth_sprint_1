@@ -9,4 +9,7 @@ https://github.com/mshinkareva/Auth_sprint_1
 ```bash
 docker-compose up -d --build --force-recreate
 ```
-5. Сервис доступен по адресу https://127.0.0.1/api/openapi#/
+5. Сервис доступен по адресу https://127.0.0.1:444/api/openapi#/
+    
+## Для отладки
+http://127.0.0.1:8002/api/openapi#/ - дев окружение
