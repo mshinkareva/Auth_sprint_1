@@ -162,6 +162,7 @@ class AuthService(AuthServiceBase):
         refresh_jti = (await self.auth.get_raw_jwt()).get('refresh_jti')
         access_jti = (await self.auth.get_raw_jwt())['jti']
         await self.add_jwt_to_redis(access_jti)
+        print(f'🔴  access_jti {access_jti}')
         if refresh_jti:
             await self.add_jwt_to_redis(refresh_jti)
 
