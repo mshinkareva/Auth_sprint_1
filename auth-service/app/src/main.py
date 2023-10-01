@@ -2,20 +2,23 @@ import logging
 
 import uvicorn
 from async_fastapi_jwt_auth import AuthJWT
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi import status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from redis.asyncio import Redis
 from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncEngine
-from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1 import auth, permission, role, user, oauth
 from src.core.logger import LOGGING
 from src.db import redis, postgres
 from src.services.auth import get_current_user_global
 from src.settings import settings
+from src.tracer import configure_tracer
 
 app = FastAPI(
     title=settings.project_name,
@@ -26,9 +29,13 @@ app = FastAPI(
     dependencies=[Depends(RateLimiter(times=10, seconds=25))],
 )
 
+configure_tracer()
+
+FastAPIInstrumentor.instrument_app(app)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://127.0.0.1:444"],
+    allow_origins=['https://oauth.vk.com/access_token', 'https://oauth.vk.com'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +45,15 @@ app.add_middleware(
 @AuthJWT.load_config
 def get_config():
     return settings
+
+
+@app.middleware('http')
+async def before_request(request: Request, call_next):
+    response = await call_next(request)
+    request_id = request.headers.get('X-Request-Id')
+    if not request_id:
+        return ORJSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={'detail': 'X-Request-Id is required'})
+    return response
 
 
 @AuthJWT.token_in_denylist_loader
@@ -66,6 +82,7 @@ async def shutdown():
 app.include_router(
     oauth.router, prefix='/api/v1/oauth'
 )
+
 app.include_router(
     auth.router, prefix='/api/v1/auth', dependencies=[Depends(get_current_user_global)]
 )

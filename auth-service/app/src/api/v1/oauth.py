@@ -16,7 +16,6 @@ REDIRECT_URI = "https://127.0.0.1:444/api/openapi#/"
 @router.get('/login/vk', tags=['oauth'])
 async def vk_login():
     auth_request_url = f"{AUTH_URL}?client_id={CLIENT_ID}&display=page&redirect_uri={REDIRECT_URI}&scope=friends,email&response_type=code&v=5.150"
-    print(f'🔴️️- 🔴️ {auth_request_url}')
     return RedirectResponse(auth_request_url)
 
 
