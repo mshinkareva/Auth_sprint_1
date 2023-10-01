@@ -18,7 +18,6 @@ from src.services.auth import (
 
 router = APIRouter()
 
-
 @router.post(
     '/signup',
     status_code=HTTPStatus.OK,
@@ -44,6 +43,9 @@ async def register(
     except Exception as ex:
         logger.error(f"Signup failed due to error: {ex}")
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(ex))
+
+
+
 
 
 @router.post(
